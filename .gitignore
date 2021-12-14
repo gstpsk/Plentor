@@ -1,0 +1,6 @@
+build
+public/build
+node_modules
+tmp
+
+*.sqlite3

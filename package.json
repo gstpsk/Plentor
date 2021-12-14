@@ -1,0 +1,26 @@
+{
+  "name": "web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "@babel/core": "^7.14.8",
+    "babel-loader": "^8.2.2",
+    "compression-webpack-plugin": "^6.1.1",
+    "css-loader": "^5.2.7",
+    "extract-css-chunks-webpack-plugin": "^4.8.0",
+    "file-loader": "^6.2.0",
+    "node-sass": "^6.0.1",
+    "sass-loader": "^10.2.0",
+    "webpack": "^4.46.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.2",
+    "webpack-manifest-plugin": "^3.1.1"
+  },
+  "scripts": {
+    "build": "webpack --config webpack.config.js --bail",
+    "start": "webpack-dev-server --config webpack.config.js --hot --inline"
+  },
+  "author": "",
+  "license": "ISC"
+}
