@@ -21,7 +21,7 @@ func main() {
 	defer db.Close() // good practice mate
 
 	sqlStmt := `
-		create table users (id integer not null primary key, username text not null, hash text not null)
+		CREATE TABLE users (id integer not null primary key, username text not null unique, hash text not null)
 	
 	`
 	_, err = db.Exec(sqlStmt)
@@ -36,6 +36,7 @@ func main() {
 	// Routes
 	z.Get("/", controllers.HelloIndex)
 	z.Post("/api/login", controllers.LoginController)
+	z.Post("/api/register", controllers.RegisterController)
 
 	z.Start()
 }
