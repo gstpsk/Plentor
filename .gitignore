@@ -2,6 +2,6 @@ build
 public/build
 node_modules
 tmp
-db
+db/
 
 *.sqlite3

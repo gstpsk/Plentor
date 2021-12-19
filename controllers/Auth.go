@@ -11,6 +11,7 @@ import (
 )
 
 func LoginController(ctx web.Context) error {
+	// Read request body to buffer and unmarshall
 	buf, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
 		log.Fatalf("Failed to read body to buffer: %s", err)
@@ -21,25 +22,14 @@ func LoginController(ctx web.Context) error {
 	username := jdata["username"]
 	password := jdata["password"]
 
+	// Get hash from database
 	db := util.DatabaseConnect()
 	defer db.Close()
 	hash, err := util.GetHashByUsername(db, username)
 	if err != nil {
 		log.Fatalf("Failed to retrieve hash from database: %s", err)
 	}
-
-	// Check if proposed hash matches hash
-	/*hashProp, err := util.GetBcrypt(password)
-	if err != nil {
-		log.Fatalf("Failed to hash password: %s", err)
-	}
-
-	if hashProp != hash {
-		fmt.Printf("prop hash: %s\nreal hash: %s\n", hashProp, hash)
-		ctx.SetStatus(403)
-		return ctx.RenderJson(fmt.Sprintf("{'message': '%s'}", "Invalid username or password!"))
-	}*/
-
+	// Validate the hash
 	if !util.HashIsValid(hash, password) {
 		return ctx.RenderJson(fmt.Sprintf("{'message': '%s'}", "Invalid username or password!"))
 	}
@@ -48,6 +38,7 @@ func LoginController(ctx web.Context) error {
 }
 
 func RegisterController(ctx web.Context) error {
+	// Read request body to buffer and unmarshall
 	buf, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
 		log.Fatalf("Failed to read body to buffer: %s", err)
@@ -58,9 +49,11 @@ func RegisterController(ctx web.Context) error {
 	username := jdata["username"]
 	password := jdata["password"]
 
+	// Hash the plaintext password
 	hash, err := util.GetBcrypt(password)
 	util.Check(err)
 
+	// Save to the database
 	db := util.DatabaseConnect()
 	defer db.Close() // good practice mate, can't let 'em linger
 	err = util.InsertUser(db, username, hash)

@@ -35,6 +35,7 @@ func main() {
 
 	// Routes
 	z.Get("/", controllers.HelloIndex)
+	z.Get("/login", controllers.LoginPage)
 	z.Post("/api/login", controllers.LoginController)
 	z.Post("/api/register", controllers.RegisterController)
 

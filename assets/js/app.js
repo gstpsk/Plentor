@@ -4,11 +4,11 @@ function appendText(text) {
     document.querySelector(".texts").appendChild(p);
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+/*document.addEventListener("DOMContentLoaded", function() {
     window.setTimeout(function() {
         window.setTimeout(function() {
             appendText("✅ Assets is working!");
         }, 100);
     })
-});
+});*/
 
