@@ -5,10 +5,15 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/go-zepto/zepto/web"
 	"github.com/gstpsk/Plentor/util"
 )
+
+// Initialize session manager
+var Sessions = make(map[string]map[string]string)
 
 func LoginController(ctx web.Context) error {
 	// Read request body to buffer and unmarshall
@@ -29,12 +34,51 @@ func LoginController(ctx web.Context) error {
 	if err != nil {
 		log.Fatalf("Failed to retrieve hash from database: %s", err)
 	}
+
+	// Form response struct
+	type Message struct {
+		Message string `json:"message"`
+	}
+	var respMsg = Message{}
+
 	// Validate the hash
 	if !util.HashIsValid(hash, password) {
-		return ctx.RenderJson(fmt.Sprintf("{'message': '%s'}", "Invalid username or password!"))
+		respMsg.Message = "Invalid username or password!"
+		str, err := json.Marshal(respMsg)
+		if err != nil {
+			log.Fatalf("Failed to marshal JSON: %s", err)
+		}
+		return ctx.RenderJson(string(str))
 	}
 
-	return ctx.RenderJson(fmt.Sprintf("{'message': '%s'}", "success"))
+	// Generate session id that doesn't exist
+	var SessionId string
+	for {
+		SessionId = util.RandomString(32)
+		if Sessions[SessionId] == nil {
+			break
+		}
+	}
+
+	// Initialize session map
+	Sessions[SessionId] = make(map[string]string)
+	// Add expiry timestamp
+	Sessions[SessionId]["expires"] = time.Now().Add(time.Hour * 2).String()
+	// Set session cookie
+	cookie := http.Cookie{
+		Name:   "SESSION-ID",
+		Value:  SessionId,
+		MaxAge: 300,
+		Secure: true, // prevent warning: “SameSite” attribute set to “None” or an invalid value, without the “secure” attribute.
+	}
+	http.SetCookie(ctx.Response(), &cookie)
+
+	respMsg.Message = "success"
+	str, err := json.Marshal(respMsg)
+	if err != nil {
+		log.Fatalf("Failed to marshal JSON: %s", err)
+	}
+	return ctx.RenderJson(str)
 }
 
 func RegisterController(ctx web.Context) error {
