@@ -1,0 +1,38 @@
+{% extends "../layouts/default.html" %}
+
+{% block title %}
+  Hello, Zepto!
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <p class="h3">Nieuwe bijeenkomst</p>
+        <form id="NewEventForm">
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Naam</label>
+                <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Mentorgesprekken 5B">
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Locatie</label>
+                <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Lokaal 323">
+            </div>
+            <div id="timeblockContainer" class="container p-0">
+                <div class="row align-items-center mb-4">
+                    <div class="col-10">
+                        <p class="h5 m-0">Beschikbare tijdsvakken</p>
+                    </div>
+                    <div class="d-flex col-2 justify-content-end">
+                        <button onclick="AddTimeblock()" type="button" class="btn btn-primary btn-sm rounded-pill"><i class="bi-calendar-plus" style="font-size: 1.2rem; color: white;"></i></button>               
+                    </div>
+                </div>
+                <div id="frankje"></div>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script type="text/babel" src="/public/build/new_event.jsx"></script>
+
+{% endblock %}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"os"
 
 	"github.com/go-zepto/zepto"
@@ -15,20 +16,21 @@ func main() {
 	util.LoadConfig()
 
 	// Initialize the database
-	os.Remove("./db/dev.db")
-	db, err := sql.Open("sqlite3", "./db/dev.db")
-	util.Check(err)
-	defer db.Close() // good practice mate
+	//os.Remove("./db/dev.db")
+	file, err := os.Open("./db/dev.db")
+	if errors.Is(err, os.ErrNotExist) {
+		db, err := sql.Open("sqlite3", "./db/dev.db")
+		util.Check(err)
+		defer db.Close() // good practice mate
 
-	sqlStmt := `
-		CREATE TABLE users (id integer not null primary key, username text, email text not null unique, hash text not null)
-	
-	`
-	_, err = db.Exec(sqlStmt)
-	util.Check(err)
-
-	//tx, err := db.Begin()
-	util.Check(err)
+		sqlStmt := `
+			CREATE TABLE users (id integer not null primary key, username text, email text not null unique, hash text not null)
+		
+		`
+		_, err = db.Exec(sqlStmt)
+		util.Check(err)
+	}
+	file.Close()
 
 	// Create Zepto
 	z := zepto.NewZepto()
@@ -38,6 +40,10 @@ func main() {
 	z.Get("/login", controllers.LoginPage)
 	z.Get("/register", controllers.RegisterPage)
 	z.Get("/forgot", controllers.ForgotPage)
+	z.Get("/dashboard", controllers.DashboardPage)
+	z.Get("/event/new", controllers.NewEventPage)
+
+	// API routes
 	z.Post("/api/login", controllers.LoginController)
 	z.Post("/api/register", controllers.RegisterController)
 

@@ -67,7 +67,8 @@ func LoginController(ctx web.Context) error {
 	cookie := http.Cookie{
 		Name:   "SESSION-ID",
 		Value:  SessionId,
-		MaxAge: 300,
+		MaxAge: 0,
+		Path:   "/",
 		Secure: true, // prevent warning: “SameSite” attribute set to “None” or an invalid value, without the “secure” attribute.
 	}
 	http.SetCookie(ctx.Response(), &cookie)
