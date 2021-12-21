@@ -7,6 +7,8 @@
 {% block body %}
     <div class="container">
         <h1 class="mb-5">Welkom!</h1>
+
+        <div id="errorMsg" class="alert alert-danger visually-hidden" role="alert"></div>
           
         <form id="LoginForm">
             <!-- Email input -->
@@ -29,13 +31,13 @@
                     Remember me
                 </label>
                 </div>
-                <a href="#!" class="text-body">Forgot password?</a>
+                <a href="forgot" class="text-body">Wachtwoord vergeten?</a>
             </div>
 
             <div class="text-center text-lg-start mt-4 pt-2">
                 <button type="submit" class="btn btn-primary btn-lg">Login</button>
-                <p id="errorMsg" class="small fw-bold mt-2 pt-1 mb-0">Don't have an account? <a href="#!"
-                    class="link-danger">Register</a></p>
+                <p id="errorMsg" class="small fw-bold mt-2 pt-1 mb-0">Bent u (nog) niet ingeschreven? <a href="/register"
+                    class="link-danger">Registreer je dan hier</a></p>
             </div>
         </form>
     </div>
@@ -51,7 +53,7 @@
                 const password = formData.get('password');
                 const formJson = `
                     {
-                        "username": "${email}",
+                        "email": "${email}",
                         "password": "${password}"
                     }
                 `;                           
@@ -69,7 +71,9 @@
                     if (obj.message === "success") {
                         window.location = "dashboard";
                     } else {
-                        document.getElementById("errorMsg").innerHTML = obj.message;
+                        let msg = document.getElementById("errorMsg")
+                        msg.innerHTML = obj.message;
+                        msg.classList.remove("visually-hidden");
                     }                      
                 }).catch(function (error) {
                     console.error(error);

@@ -11,17 +11,17 @@ func DatabaseConnect() *sql.DB {
 	return db
 }
 
-func InsertUser(db *sql.DB, username string, hash string) error {
+func InsertUser(db *sql.DB, username string, email string, hash string) error {
 	log.Println("Inserting user into database...")
 	insertUserSQL := `
-		INSERT INTO users(username, hash) VALUES (?, ?)
+		INSERT INTO users(username, email, hash) VALUES (?, ?, ?)
 	`
 	stmt, err := db.Prepare(insertUserSQL) // Prepared statements to prevent sql injection
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(username, hash)
+	_, err = stmt.Exec(username, email, hash)
 	if err != nil {
 		return err
 	}
@@ -29,16 +29,16 @@ func InsertUser(db *sql.DB, username string, hash string) error {
 	return nil
 }
 
-func GetHashByUsername(db *sql.DB, username string) (string, error) {
+func GetHashByEmail(db *sql.DB, email string) (string, error) {
 	selectUserSQL := `
-		SELECT hash FROM users WHERE username = ?
+		SELECT hash FROM users WHERE email = ?
 	`
 	stmt, err := db.Prepare(selectUserSQL)
 	if err != nil {
 		return "", err
 	}
 
-	row, err := stmt.Query(username)
+	row, err := stmt.Query(email)
 	if err != nil {
 		return "", err
 	}

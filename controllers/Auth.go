@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -24,13 +23,13 @@ func LoginController(ctx web.Context) error {
 
 	var jdata map[string]string
 	json.Unmarshal(buf, &jdata)
-	username := jdata["username"]
+	email := jdata["email"]
 	password := jdata["password"]
 
 	// Get hash from database
 	db := util.DatabaseConnect()
 	defer db.Close()
-	hash, err := util.GetHashByUsername(db, username)
+	hash, err := util.GetHashByEmail(db, email)
 	if err != nil {
 		log.Fatalf("Failed to retrieve hash from database: %s", err)
 	}
@@ -43,7 +42,7 @@ func LoginController(ctx web.Context) error {
 
 	// Validate the hash
 	if !util.HashIsValid(hash, password) {
-		respMsg.Message = "Invalid username or password!"
+		respMsg.Message = "Invalid email or password!"
 		str, err := json.Marshal(respMsg)
 		if err != nil {
 			log.Fatalf("Failed to marshal JSON: %s", err)
@@ -78,7 +77,7 @@ func LoginController(ctx web.Context) error {
 	if err != nil {
 		log.Fatalf("Failed to marshal JSON: %s", err)
 	}
-	return ctx.RenderJson(str)
+	return ctx.RenderJson(string(str))
 }
 
 func RegisterController(ctx web.Context) error {
@@ -91,6 +90,7 @@ func RegisterController(ctx web.Context) error {
 	var jdata map[string]string
 	json.Unmarshal(buf, &jdata)
 	username := jdata["username"]
+	email := jdata["email"]
 	password := jdata["password"]
 
 	// Hash the plaintext password
@@ -100,16 +100,27 @@ func RegisterController(ctx web.Context) error {
 	// Save to the database
 	db := util.DatabaseConnect()
 	defer db.Close() // good practice mate, can't let 'em linger
-	err = util.InsertUser(db, username, hash)
+	err = util.InsertUser(db, username, email, hash)
+
+	// Form response struct
+	type Message struct {
+		Message string `json:"message"`
+	}
+	var respMsg = Message{}
+	respMsg.Message = "success"
 
 	if err != nil {
 		log.Printf("Failed to register user: %s", err.Error())
-		if err.Error() == "UNIQUE constraint failed: users.username" { // bad way to check i know but idek how else i could do it
-			return ctx.RenderJson(fmt.Sprintf("{'message': '%s'}", "User already exists!"))
+		if err.Error() == "UNIQUE constraint failed: users.email" { // bad way to check i know but idek how else i could do it
+			respMsg.Message = "User already exists!"
 		}
 		ctx.SetStatus(500) // internal server error bro
-		return ctx.RenderJson(fmt.Sprintf("{'message': '%s'}", "failed"))
+		respMsg.Message = "Internal server error"
 	}
 
-	return ctx.RenderJson(fmt.Sprintf("{'message': '%s'}", "success"))
+	str, err := json.Marshal(respMsg)
+	if err != nil {
+		log.Fatalf("Failed to marshal JSON: %s", err)
+	}
+	return ctx.RenderJson(string(str))
 }
