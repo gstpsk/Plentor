@@ -3,6 +3,8 @@ package util
 import (
 	"database/sql"
 	"log"
+
+	"github.com/gstpsk/Plentor/models"
 )
 
 func DatabaseConnect() *sql.DB {
@@ -58,4 +60,12 @@ func GetHashByEmail(db *sql.DB, email string) (string, error) {
 	row.Scan(&hash)
 
 	return hash, nil
+}
+
+func InsertEvent(db *sql.DB, event models.Event) {
+	log.Println("Inserting event into database...")
+	/*insertEventSQL = `
+		INSERT INTO events(user_id, name, location, )
+	`
+	*/
 }

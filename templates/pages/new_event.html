@@ -1,38 +1,178 @@
 {% extends "../layouts/default.html" %}
 
 {% block title %}
-  Hello, Zepto!
+Hello, Zepto!
 {% endblock %}
 
 {% block body %}
-    <div class="container mt-5">
-        <p class="h3">Nieuwe bijeenkomst</p>
-        <form id="NewEventForm">
-            <div class="mb-3">
-                <label for="exampleFormControlInput1" class="form-label">Naam</label>
-                <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Mentorgesprekken 5B">
+<div class="container mt-5">
+    <div id="errorMsg" class="alert alert-danger visually-hidden" role="alert"></div>
+    <div class="row align-items-center mb-4">
+        <div class="col-10">
+            <p class="h3 m-0">Nieuwe bijeenkomst</p>
+        </div>
+        <div class="d-flex col-2 justify-content-end">
+            <button onclick="SubmitEventForm()" type="button" class="btn btn-primary">Opslaan</button>
+        </div>
+    </div>
+    <form id="NewEventForm">
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Naam</label>
+            <input name="name" type="text" class="form-control" id="exampleFormControlInput1"
+                placeholder="Mentorgesprekken 5B" />
+        </div>
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Locatie</label>
+            <input name="location" type="text" class="form-control" id="exampleFormControlInput1"
+                placeholder="Lokaal 323" />
+        </div>
+        <div id="timeblockContainer" class="container p-0">
+            <div class="row align-items-center mb-4">
+                <div class="col-10">
+                    <p class="h5 m-0">Beschikbare tijdsvakken</p>
+                </div>
+                <div class="d-flex col-2 justify-content-end">
+                    <button onclick="AddTimeblock()" type="button" class="btn btn-primary btn-sm rounded-pill">
+                        <i class="bi-calendar-plus" style="font-size: 1.2rem; color: white"></i>
+                    </button>
+                </div>
             </div>
-            <div class="mb-3">
-                <label for="exampleFormControlInput1" class="form-label">Locatie</label>
-                <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="Lokaal 323">
-            </div>
-            <div id="timeblockContainer" class="container p-0">
-                <div class="row align-items-center mb-4">
-                    <div class="col-10">
-                        <p class="h5 m-0">Beschikbare tijdsvakken</p>
-                    </div>
-                    <div class="d-flex col-2 justify-content-end">
-                        <button onclick="AddTimeblock()" type="button" class="btn btn-primary btn-sm rounded-pill"><i class="bi-calendar-plus" style="font-size: 1.2rem; color: white;"></i></button>               
+            <div id="timeblocks"></div>
+        </div>
+    </form>
+</div>
+
+<style>
+    #timeblockRemoveBtn {
+        color: red;
+        font-size: 2rem;
+    }
+</style>
+
+<script type="text/babel">
+    let tbs = [];
+
+    function TimeDropdown(props) {
+        return (
+            <select className="text-center" id={props.id}>
+                <option value="0">00:00</option>
+                <option value="1">01:00</option>
+                <option value="2">02:00</option>
+                <option value="3">03:00</option>
+                <option value="4">04:00</option>
+                <option value="5">05:00</option>
+                <option value="6">06:00</option>
+                <option value="7">07:00</option>
+                <option value="8">08:00</option>
+                <option value="9">09:00</option>
+                <option value="10">10:00</option>
+                <option value="11">11:00</option>
+                <option value="12">12:00</option>
+                <option value="13">13:00</option>
+                <option value="14">14:00</option>
+                <option value="15">15:00</option>
+                <option value="16">16:00</option>
+                <option value="17">17:00</option>
+                <option value="18">18:00</option>
+                <option value="19">19:00</option>
+                <option value="20">20:00</option>
+                <option value="21">21:00</option>
+                <option value="22">22:00</option>
+                <option value="23">23:00</option>
+            </select>
+        )
+    }
+
+    function Timeblock(props) {
+        function remove() {
+            RemoveTimeblock(props.id);
+        }
+
+        return (
+            <div id={props.id} className="row mb-3">
+                <div className="card">
+                    <div className="card-body row">
+                        <div className="col-11">
+                            Op <input id="date" type="date" /> ben ik beschikbaar van <span />
+                            <TimeDropdown id="from" />
+                            <span /> tot <span />
+                            <TimeDropdown id="until" />
+                        </div>
+                        <div className="col-1 d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a ><i className="bi-file-x-fill" onClick={remove} id="timeblockRemoveBtn"></i></a>
+                        </div>
                     </div>
                 </div>
-                <div id="frankje"></div>
             </div>
-        </form>
-    </div>
+        );
+    }
 
-    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
-    <script type="text/babel" src="/public/build/new_event.jsx"></script>
+    function Timeblocks() {
+        return <React.Fragment>{tbs}</React.Fragment>;
+    }
+
+    function AddTimeblock() {
+        console.log(
+            "Adding new timeblock to array, which is now " +
+            tbs.length +
+            " blocks long"
+        );
+        tbs.push(<Timeblock key={tbs.length} id={"tb-" + tbs.length.toString()} />);
+        ReactDOM.render(<Timeblocks />, document.getElementById("timeblocks"));
+    }
+
+    function RemoveTimeblock(id) {
+        console.log(
+            "Removing timeblock to array, which is now " +
+            tbs.length +
+            " blocks long"
+        );
+        const index = id.split('-')[1];
+        tbs.splice(index, 1);
+        ReactDOM.render(<Timeblocks />, document.getElementById("timeblocks"));
+    }
+
+    function SubmitEventForm() {
+        const form = document.getElementById("NewEventForm");
+        let formData = new FormData(form);
+
+        const obj = new Object();
+        obj.name = formData.get("name");
+        obj.location = formData.get("location");
+        obj.timeblocks = [];
+
+        for (let i = 0; i < tbs.length; i++) {
+            const tb = new Object();
+            tb.date = document.querySelector(`#tb-${i.toString()} > div > div > input`).value;
+            tb.from = document.querySelector(`#tb-${i.toString()} > div > div > select#from`).value;
+            tb.until = document.querySelector(`#tb-${i.toString()} > div > div > select#until`).value;
+            obj.timeblocks.push(tb);
+        }
+        const json = JSON.stringify(obj);
+
+        fetch('/api/event/new', {
+            method: 'POST',
+            body: json
+        }).then(function (response) {
+            if (response.ok) {
+                return response.json();
+            }
+            return null;
+        }).then(function (json) {
+            const obj = JSON.parse(json);
+            if (obj.message === "success") {
+                window.location = "/events";
+            } else {
+                document.getElementById("errorMsg").innerHTML = obj.message;
+            }
+        }).catch(function (error) {
+            console.error(error);
+        })
+    }
+</script>
+
+<script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
 
 {% endblock %}

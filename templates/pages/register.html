@@ -1,75 +1,78 @@
 {% extends "../layouts/default.html" %}
 
 {% block title %}
-  Hello, Zepto!
+Hello, Zepto!
 {% endblock %}
 
 {% block body %}
-    <div class="container">
-        <h1 class="mb-5">Welkom, creëer hier je account!</h1>
-          
-        <form id="RegisterForm">
-            <div class="mb-3">
-                <label for="exampleFormControlInput1" class="form-label">Naam</label>
-                <input name="username" type="text" class="form-control" id="exampleFormControlInput1" placeholder="Geef uw volledige naam op">
-            </div>
+<div class="container">
+    <h1 class="mb-5">Welkom, creëer hier je account!</h1>
 
-            <div class="mb-3">
-                <label for="exampleFormControlInput1" class="form-label">Email address</label>
-                <input name="email" type="email" class="form-control" id="exampleFormControlInput1" placeholder="Geef uw e-mailadres op">
-            </div>
+    <form id="RegisterForm">
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Naam</label>
+            <input name="username" type="text" class="form-control" id="exampleFormControlInput1"
+                placeholder="Geef uw volledige naam op">
+        </div>
 
-            <div class="mb-3">
-                <label for="exampleFormControlInput1" class="form-label">Wachtwoord</label>
-                <input name="password" type="password" class="form-control" id="exampleFormControlInput1" placeholder="Geef uw wachtwoord op">
-            </div>
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Email address</label>
+            <input name="email" type="email" class="form-control" id="exampleFormControlInput1"
+                placeholder="Geef uw e-mailadres op">
+        </div>
 
-            <div class="text-center text-lg-start mt-4 pt-2">
-                <button type="submit" class="btn btn-primary btn-lg">Uw account aanmaken</button>
-            </div>
-        </form>
-    </div>
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Wachtwoord</label>
+            <input name="password" type="password" class="form-control" id="exampleFormControlInput1"
+                placeholder="Geef uw wachtwoord op">
+        </div>
 
-    <script type="text/javascript">
-        function init() {
-            const loginForm = document.getElementById('RegisterForm');
-            loginForm.addEventListener('submit', function (e) {                
-                e.preventDefault();
-                    
-                const formData = new FormData(loginForm);
-                const username = formData.get('username');
-                const email = formData.get('email');
-                const password = formData.get('password');
-                const formJson = `
+        <div class="text-center text-lg-start mt-4 pt-2">
+            <button type="submit" class="btn btn-primary btn-lg">Uw account aanmaken</button>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    function init() {
+        const loginForm = document.getElementById('RegisterForm');
+        loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(loginForm);
+            const username = formData.get('username');
+            const email = formData.get('email');
+            const password = formData.get('password');
+            const formJson = `
                     {
                         "username": "${username}",
                         "email": "${email}",
                         "password": "${password}"
                     }
-                `;                           
-                    
-                fetch('/api/register', {
-                    method: 'POST',
-                    body: formJson
-                }).then(function (response) {
-                    if (response.ok) {
-                        return response.json();   
-                    }
-                    return null;                    
-                }).then(function (json) {
-                    const obj = JSON.parse(json);
-                    if (obj.message === "success") {
-                        window.location = "dashboard";
-                    } else {
-                        document.getElementById("errorMsg").innerHTML = obj.message;
-                    }                      
-                }).catch(function (error) {
-                    console.error(error);
-                })
-                
-            });
-        }
+                `;
 
-        window.onload = init;
-    </script>
+            fetch('/api/register', {
+                method: 'POST',
+                body: formJson
+            }).then(function (response) {
+                if (response.ok) {
+                    return response.json();
+                }
+                return null;
+            }).then(function (json) {
+                const obj = JSON.parse(json);
+                if (obj.message === "success") {
+                    window.location = "dashboard";
+                } else {
+                    document.getElementById("errorMsg").innerHTML = obj.message;
+                }
+            }).catch(function (error) {
+                console.error(error);
+            })
+
+        });
+    }
+
+    window.onload = init;
+</script>
 {% endblock %}

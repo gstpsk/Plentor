@@ -46,6 +46,7 @@ func main() {
 	// API routes
 	z.Post("/api/login", controllers.LoginController)
 	z.Post("/api/register", controllers.RegisterController)
+	z.Post("/api/event/new", controllers.EventController)
 
 	z.Start()
 }
