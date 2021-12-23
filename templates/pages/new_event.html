@@ -143,9 +143,9 @@ Hello, Zepto!
 
         for (let i = 0; i < tbs.length; i++) {
             const tb = new Object();
-            tb.date = document.querySelector(`#tb-${i.toString()} > div > div > input`).value;
-            tb.from = document.querySelector(`#tb-${i.toString()} > div > div > select#from`).value;
-            tb.until = document.querySelector(`#tb-${i.toString()} > div > div > select#until`).value;
+            tb.date = document.querySelector(`#tb-${i.toString()} > div > div > div > input`).value;
+            tb.from = document.querySelector(`#tb-${i.toString()} > div > div > div > select#from`).value;
+            tb.until = document.querySelector(`#tb-${i.toString()} > div > div > div > select#until`).value;
             obj.timeblocks.push(tb);
         }
         const json = JSON.stringify(obj);
@@ -159,11 +159,10 @@ Hello, Zepto!
             }
             return null;
         }).then(function (json) {
-            const obj = JSON.parse(json);
-            if (obj.message === "success") {
+            if (json.message === "success") {
                 window.location = "/events";
             } else {
-                document.getElementById("errorMsg").innerHTML = obj.message;
+                document.getElementById("errorMsg").innerHTML = json.message;
             }
         }).catch(function (error) {
             console.error(error);

@@ -1,19 +1,22 @@
 {% extends "../layouts/default.html" %}
 
 {% block title %}
-  Hello, Zepto!
+Hello, Zepto!
 {% endblock %}
 
 {% block body %}
-  <div class="gopher">
-    <img src="/public/images/gopher.png" />
-  </div>
-  <h1>
-    Hello, Zepto!
+<div class="p-5 m-5 text-center">
+  <h1 class="display-5 fw-bold">
+    Welkom bij Plentor!
   </h1>
   <div class="texts">
-    <p>
-      Your project was successfully created!
+    <p class="lead">
+      Zeg gedag tegen ongeorganiseerde mentoravonden en dubbele afspraken, Plentor schiet u te hulp!
     </p>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+      <a type="button" class="btn btn-primary btn-lg px-4 gap-3" href="/register">Meteen aan de slag</a>
+      <a type="button" class="btn btn-outline-secondary btn-lg px-4" href="/login">Log In</a>
+    </div>
   </div>
+</div>
 {% endblock %}

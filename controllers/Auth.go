@@ -36,7 +36,6 @@ func LoginController(ctx web.Context) error {
 		Message string `json:"message"`
 	}
 	var respMsg = Message{}
-	respMsg.Message = "success"
 
 	// Get hash from database
 	col := db.GetUserCol()
@@ -44,42 +43,44 @@ func LoginController(ctx web.Context) error {
 	res := col.FindOne(context.Background(), filter)
 	var user models.User
 	err = res.Decode(&user)
+
 	if err != nil { // no results
 		respMsg.Message = "Invalid email or password!"
-	} else {
-		// Validate the hash
-		if !util.HashIsValid(user.Hash, password) {
-			respMsg.Message = "Invalid email or password!"
-		}
-		// Generate session id that doesn't exist
-		var SessionId string
-		for {
-			SessionId = util.RandomString(32)
-			if Sessions[SessionId] == nil {
-				break
-			}
-		}
+		return ctx.RenderJson(respMsg)
 
-		// Initialize session map
-		Sessions[SessionId] = make(map[string]string)
-		// Add expiry timestamp
-		Sessions[SessionId]["expires"] = time.Now().Add(time.Hour * 2).String()
-		// Set session cookie
-		cookie := http.Cookie{
-			Name:   "SESSION-ID",
-			Value:  SessionId,
-			MaxAge: 0,
-			Path:   "/",
-			Secure: true, // prevent warning: “SameSite” attribute set to “None” or an invalid value, without the “secure” attribute.
-		}
-		http.SetCookie(ctx.Response(), &cookie)
 	}
 
-	str, err := json.Marshal(respMsg)
-	if err != nil {
-		log.Fatalf("Failed to marshal JSON: %s", err)
+	// Validate the hash
+	if !util.HashIsValid(user.Hash, password) {
+		respMsg.Message = "Invalid email or password!"
+		return ctx.RenderJson(respMsg)
 	}
-	return ctx.RenderJson(string(str))
+
+	// Generate session id that doesn't exist
+	var SessionId string
+	for {
+		SessionId = util.RandomString(32)
+		if Sessions[SessionId] == nil {
+			break
+		}
+	}
+
+	// Initialize session map
+	Sessions[SessionId] = make(map[string]string)
+	// Add expiry timestamp
+	Sessions[SessionId]["expires"] = time.Now().Add(time.Hour * 2).String()
+	Sessions[SessionId]["id"] = user.Id
+	// Set session cookie
+	cookie := http.Cookie{
+		Name:   "SESSION-ID",
+		Value:  SessionId,
+		MaxAge: 0,
+		Path:   "/",
+		Secure: true, // prevent warning: “SameSite” attribute set to “None” or an invalid value, without the “secure” attribute.
+	}
+	http.SetCookie(ctx.Response(), &cookie)
+	respMsg.Message = "success"
+	return ctx.RenderJson(respMsg)
 }
 
 func RegisterController(ctx web.Context) error {
@@ -130,10 +131,5 @@ func RegisterController(ctx web.Context) error {
 		}
 	}
 
-	// Marshall object to json and send it back to the user
-	str, err := json.Marshal(respMsg)
-	if err != nil {
-		log.Fatalf("Failed to marshal JSON: %s", err)
-	}
-	return ctx.RenderJson(string(str))
+	return ctx.RenderJson(respMsg)
 }
