@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -8,7 +9,10 @@ import (
 	"time"
 
 	"github.com/go-zepto/zepto/web"
+	"github.com/gstpsk/Plentor/db"
+	"github.com/gstpsk/Plentor/models"
 	"github.com/gstpsk/Plentor/util"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // Initialize session manager
@@ -21,59 +25,56 @@ func LoginController(ctx web.Context) error {
 		log.Fatalf("Failed to read body to buffer: %s", err)
 	}
 
+	// Unmarshall JSON data
 	var jdata map[string]string
 	json.Unmarshal(buf, &jdata)
 	email := jdata["email"]
 	password := jdata["password"]
-
-	// Get hash from database
-	db := util.DatabaseConnect()
-	defer db.Close()
-	hash, err := util.GetHashByEmail(db, email)
-	if err != nil {
-		log.Fatalf("Failed to retrieve hash from database: %s", err)
-	}
 
 	// Form response struct
 	type Message struct {
 		Message string `json:"message"`
 	}
 	var respMsg = Message{}
-
-	// Validate the hash
-	if !util.HashIsValid(hash, password) {
-		respMsg.Message = "Invalid email or password!"
-		str, err := json.Marshal(respMsg)
-		if err != nil {
-			log.Fatalf("Failed to marshal JSON: %s", err)
-		}
-		return ctx.RenderJson(string(str))
-	}
-
-	// Generate session id that doesn't exist
-	var SessionId string
-	for {
-		SessionId = util.RandomString(32)
-		if Sessions[SessionId] == nil {
-			break
-		}
-	}
-
-	// Initialize session map
-	Sessions[SessionId] = make(map[string]string)
-	// Add expiry timestamp
-	Sessions[SessionId]["expires"] = time.Now().Add(time.Hour * 2).String()
-	// Set session cookie
-	cookie := http.Cookie{
-		Name:   "SESSION-ID",
-		Value:  SessionId,
-		MaxAge: 0,
-		Path:   "/",
-		Secure: true, // prevent warning: “SameSite” attribute set to “None” or an invalid value, without the “secure” attribute.
-	}
-	http.SetCookie(ctx.Response(), &cookie)
-
 	respMsg.Message = "success"
+
+	// Get hash from database
+	col := db.GetUserCol()
+	var filter bson.M = bson.M{"email": email}
+	res := col.FindOne(context.Background(), filter)
+	var user models.User
+	err = res.Decode(&user)
+	if err != nil { // no results
+		respMsg.Message = "Invalid email or password!"
+	} else {
+		// Validate the hash
+		if !util.HashIsValid(user.Hash, password) {
+			respMsg.Message = "Invalid email or password!"
+		}
+		// Generate session id that doesn't exist
+		var SessionId string
+		for {
+			SessionId = util.RandomString(32)
+			if Sessions[SessionId] == nil {
+				break
+			}
+		}
+
+		// Initialize session map
+		Sessions[SessionId] = make(map[string]string)
+		// Add expiry timestamp
+		Sessions[SessionId]["expires"] = time.Now().Add(time.Hour * 2).String()
+		// Set session cookie
+		cookie := http.Cookie{
+			Name:   "SESSION-ID",
+			Value:  SessionId,
+			MaxAge: 0,
+			Path:   "/",
+			Secure: true, // prevent warning: “SameSite” attribute set to “None” or an invalid value, without the “secure” attribute.
+		}
+		http.SetCookie(ctx.Response(), &cookie)
+	}
+
 	str, err := json.Marshal(respMsg)
 	if err != nil {
 		log.Fatalf("Failed to marshal JSON: %s", err)
@@ -88,21 +89,6 @@ func RegisterController(ctx web.Context) error {
 		log.Fatalf("Failed to read body to buffer: %s", err)
 	}
 
-	var jdata map[string]string
-	json.Unmarshal(buf, &jdata)
-	username := jdata["username"]
-	email := jdata["email"]
-	password := jdata["password"]
-
-	// Hash the plaintext password
-	hash, err := util.GetBcrypt(password)
-	util.Check(err)
-
-	// Save to the database
-	db := util.DatabaseConnect()
-	defer db.Close() // good practice mate, can't let 'em linger
-	err = util.InsertUser(db, username, email, hash)
-
 	// Form response struct
 	type Message struct {
 		Message string `json:"message"`
@@ -110,15 +96,41 @@ func RegisterController(ctx web.Context) error {
 	var respMsg = Message{}
 	respMsg.Message = "success"
 
+	// Unmarshall json
+	var jdata map[string]string
+	json.Unmarshal(buf, &jdata)
+	password := jdata["password"]
+
+	// Hash the plaintext password
+	hash, err := util.GetBcrypt(password)
+	util.Check(err)
+
+	// Create object
+	var user models.User
+	user.Name = jdata["username"]
+	user.Email = jdata["email"]
+	user.Hash = hash
+
+	// Check if user already exists
+	col := db.GetUserCol()
+	var filter bson.M = bson.M{"email": user.Email}
+	cur, err := col.Find(context.Background(), filter)
 	if err != nil {
-		log.Printf("Failed to register user: %s", err.Error())
-		if err.Error() == "UNIQUE constraint failed: users.email" { // bad way to check i know but idek how else i could do it
-			respMsg.Message = "User already exists!"
+		log.Fatalf("Failed to query database for user: %s", err)
+	}
+	var results []bson.M
+	cur.All(context.Background(), &results)
+	if len(results) > 0 { // User already exists
+		respMsg.Message = "User already exists!"
+	} else {
+		// Insert user into database
+		_, err = col.InsertOne(context.Background(), user)
+		if err != nil {
+			log.Fatalf("Failed to insert user into database: %s", err)
 		}
-		ctx.SetStatus(500) // internal server error bro
-		respMsg.Message = "Internal server error"
 	}
 
+	// Marshall object to json and send it back to the user
 	str, err := json.Marshal(respMsg)
 	if err != nil {
 		log.Fatalf("Failed to marshal JSON: %s", err)

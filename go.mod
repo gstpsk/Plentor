@@ -8,6 +8,7 @@ require (
 	github.com/go-zepto/zepto v1.0.3
 	github.com/mattn/go-sqlite3 v1.14.8
 	github.com/spf13/cast v1.4.1 // indirect
+	go.mongodb.org/mongo-driver v1.8.1
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d // indirect
 	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect

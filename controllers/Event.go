@@ -11,7 +11,7 @@ import (
 	"github.com/gstpsk/Plentor/util"
 )
 
-func EventController(ctx web.Context) error {
+func NewEventController(ctx web.Context) error { // /api/event/new
 	// Read request body to buffer and unmarshall
 	buf, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
@@ -22,6 +22,7 @@ func EventController(ctx web.Context) error {
 
 	json.Unmarshal(buf, &newEvent)
 
+	//client := db.Connect()
 	// Save to the database
 	db := util.DatabaseConnect()
 	defer db.Close() // good practice mate, can't let 'em linger
@@ -50,6 +51,6 @@ func EventController(ctx web.Context) error {
 		if err != nil {
 			log.Fatalf("Failed to marshal JSON: %s", err)
 		}*/
-	fmt.Println(newEvent.Timeblocks[0].Date)
-	return ctx.RenderJson("{}")
+	fmt.Println(newEvent.Name)
+	return ctx.RenderJson("")
 }

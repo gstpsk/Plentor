@@ -8,6 +8,7 @@ import (
 
 type config struct {
 	BCRYPT_COST int
+	MONGODB_URI string
 }
 
 var Config config

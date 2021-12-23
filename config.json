@@ -1,3 +1,4 @@
 {
-    "BCRYPT_COST": 12
+    "BCRYPT_COST": 12,
+    "MONGODB_URI": "mongodb://localhost:27017"
 }
