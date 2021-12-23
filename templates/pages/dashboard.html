@@ -7,8 +7,39 @@
 {% block body %}
   <div class="container mt-5">
       <p class="h1 text-center">Dashboard</p>
-      <p class="h5">Events</p>
+      <p class="h5" id="eventAmount">Events: 0</p>
+      <div class="container" id="eventContainer">
+        <p class="text-muted">It appears you haven't created any events yet.</p>
+      </div>
 
       <a href="/event/new">Creëer mentorgesprek</a>
   </div>
+
+  <script>
+    function LoadEvents() {
+      console.log("Window is loaded!");
+      fetch('/api/events').then(response => {
+        if (response.ok) {
+          return response.json();
+        } else { throw Error("Failed to fetch events"); }
+      }).then(data => {
+        console.log(data);
+        // Get our eventContainer
+        const ea = document.getElementById("eventAmount");
+        const ec = document.getElementById("eventContainer");
+        if (data.length > 0) {
+          ea.innerText = "Events: " + data.length;
+          ec.innerHTML = ""; // Clear current html if we have more than 0 elements
+          for (let event of data) {
+            console.log("inserting...", event);
+            ec.insertAdjacentHTML("afterbegin", `<a class="row" href="/event/${event._id}">${event.name}</a>`);
+          }
+        }
+      }).catch((error) => {
+        console.log(error);
+      });
+    }
+
+    window.onload = LoadEvents
+  </script>
 {% endblock %}

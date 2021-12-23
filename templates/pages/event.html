@@ -9,7 +9,7 @@ Hello, Zepto!
     <div id="errorMsg" class="alert alert-danger visually-hidden" role="alert"></div>
     <div class="row align-items-center mb-4">
         <div class="col-10">
-            <p class="h3 m-0">Nieuwe bijeenkomst</p>
+            <p class="h3 m-0" id="eventTitle">Bijeenkomst</p>
         </div>
         <div class="d-flex col-2 justify-content-end">
             <button onclick="SubmitEventForm()" type="button" class="btn btn-primary">Opslaan</button>
@@ -51,6 +51,24 @@ Hello, Zepto!
 
 <script type="text/babel">
     let tbs = [];
+    window.onload = LoadEventData;
+
+    function LoadEventData() {
+        console.log("Window is loaded!");
+        const id = window.location.pathname.split('/').pop();
+        fetch(`/api/event/${id}`).then(response => {
+            if (response.ok) {
+                return response.json();
+            } else { throw Error("Failed to fetch event"); }
+        }).then(data => {
+            console.log(data);
+            // Get our eventContainer
+            const et = document.getElementById("eventTitle");
+            et.innerText = data.name;
+        }).catch((error) => {
+            console.log(error);
+        });
+    }
 
     function TimeDropdown(props) {
         return (
@@ -160,7 +178,7 @@ Hello, Zepto!
             return null;
         }).then(function (json) {
             if (json.message === "success") {
-                window.location = "/dashboard";
+                window.location = "/events";
             } else {
                 document.getElementById("errorMsg").innerHTML = json.message;
             }
