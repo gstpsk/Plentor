@@ -15,15 +15,15 @@ Hello, Zepto!
             <button onclick="SubmitEventForm()" type="button" class="btn btn-primary">Opslaan</button>
         </div>
     </div>
-    <form id="NewEventForm">
+    <form id="UpdatedEventForm">
         <div class="mb-3">
             <label for="exampleFormControlInput1" class="form-label">Naam</label>
-            <input name="name" type="text" class="form-control" id="exampleFormControlInput1"
+            <input id="eventName" name="name" type="text" class="form-control" id="exampleFormControlInput1"
                 placeholder="Mentorgesprekken 5B" />
         </div>
         <div class="mb-3">
             <label for="exampleFormControlInput1" class="form-label">Locatie</label>
-            <input name="location" type="text" class="form-control" id="exampleFormControlInput1"
+            <input id="eventLocation" name="location" type="text" class="form-control" id="exampleFormControlInput1"
                 placeholder="Lokaal 323" />
         </div>
         <div id="timeblockContainer" class="container p-0">
@@ -64,7 +64,18 @@ Hello, Zepto!
             console.log(data);
             // Get our eventContainer
             const et = document.getElementById("eventTitle");
+            const en = document.getElementById("eventName");
+            const el = document.getElementById("eventLocation");
             et.innerText = data.name;
+            en.value = data.name;
+            el.value = data.location;
+            let i = 0;
+            for (let tb of data.timeblocks) {
+                AddTimeblock(tb.date);
+                document.getElementById(`tb-${i}`).querySelector("div > div > div > div > div > div > #from").value = tb.from;
+                document.getElementById(`tb-${i}`).querySelector("div > div > div > div > div > div > #until").value = tb.until;
+                i++;
+            }
         }).catch((error) => {
             console.log(error);
         });
@@ -111,8 +122,8 @@ Hello, Zepto!
                 <div className="card">
                     <div className="card-body row">
                         <div className="col-11">
-                            Op <input id="date" type="date" /> ben ik beschikbaar van <span />
-                            <TimeDropdown id="from" />
+                            Op <input id="date" type="date" defaultValue={props.date} /> ben ik beschikbaar van <span />
+                            <TimeDropdown id="from"  />
                             <span /> tot <span />
                             <TimeDropdown id="until" />
                         </div>
@@ -129,13 +140,13 @@ Hello, Zepto!
         return <React.Fragment>{tbs}</React.Fragment>;
     }
 
-    function AddTimeblock() {
+    function AddTimeblock(date) {
         console.log(
             "Adding new timeblock to array, which is now " +
             tbs.length +
             " blocks long"
         );
-        tbs.push(<Timeblock key={tbs.length} id={"tb-" + tbs.length.toString()} />);
+        tbs.push(<Timeblock date={date} key={tbs.length} id={"tb-" + tbs.length.toString()} />);
         ReactDOM.render(<Timeblocks />, document.getElementById("timeblocks"));
     }
 

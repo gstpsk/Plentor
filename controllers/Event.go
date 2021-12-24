@@ -22,14 +22,14 @@ func NewEventController(ctx web.Context) error { // POST: /api/event/new
 	// ErrNoCookie aka they not allowed
 	if err != nil {
 		ctx.SetStatus(403)
-		fmt.Println("no cookie found")
+		log.Println("No cookie found")
 		return ctx.RenderJson("Forbidden")
 	}
 
 	// Check if cookie value is in session manager
 	if Sessions[cookie.Value] == nil {
 		ctx.SetStatus(403)
-		fmt.Println("no session found")
+		fmt.Printf("No session found for: %s\n", cookie.Value)
 		return ctx.RenderJson("Forbidden")
 	}
 
@@ -72,14 +72,14 @@ func EventsController(ctx web.Context) error { // GET: /api/events
 	// ErrNoCookie aka they not allowed
 	if err != nil {
 		ctx.SetStatus(403)
-		fmt.Println("no cookie found")
+		log.Println("No cookie found")
 		return ctx.RenderJson("Forbidden")
 	}
 
 	// Check if cookie value is in session manager
 	if Sessions[cookie.Value] == nil {
 		ctx.SetStatus(403)
-		fmt.Println("no session found")
+		fmt.Printf("No session found for: %s\n", cookie.Value)
 		return ctx.RenderJson("Forbidden")
 	}
 
@@ -103,10 +103,11 @@ func EventController(ctx web.Context) error { // GET: /api/event/{id}
 	// ErrNoCookie aka they not allowed
 	if err != nil {
 		ctx.SetStatus(403)
-		fmt.Println("no cookie found")
+		log.Println("No cookie found")
 		return ctx.RenderJson("Forbidden")
 	}
 
+	// TODO
 	// Check if cookie value is in session manager
 	// tbh this is kinda bad for security but
 	// we'll fix it later. Not like ppl gonna
@@ -114,7 +115,7 @@ func EventController(ctx web.Context) error { // GET: /api/event/{id}
 	// yes they will.
 	if Sessions[cookie.Value] == nil {
 		ctx.SetStatus(403)
-		fmt.Println("no session found")
+		fmt.Printf("No session found for: %s\n", cookie.Value)
 		return ctx.RenderJson("Forbidden")
 	}
 

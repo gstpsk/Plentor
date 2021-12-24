@@ -17,6 +17,7 @@ func main() {
 	// Routes
 	z.Get("/", controllers.HelloIndex)
 	z.Get("/login", controllers.LoginPage)
+	z.Get("/logout", controllers.LogoutPage)
 	z.Get("/register", controllers.RegisterPage)
 	z.Get("/forgot", controllers.ForgotPage)
 	z.Get("/dashboard", controllers.DashboardPage)

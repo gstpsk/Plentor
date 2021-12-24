@@ -133,3 +133,25 @@ func RegisterController(ctx web.Context) error {
 
 	return ctx.RenderJson(respMsg)
 }
+
+func LogoutPage(ctx web.Context) error {
+	cookie, err := ctx.Request().Cookie("SESSION-ID")
+	if err != nil {
+		return ctx.Redirect("/login")
+	}
+
+	// CLear session
+	Sessions[cookie.Value] = nil
+
+	// Expire the cookie
+	newCookie := http.Cookie{
+		Name:    "SESSION-ID",
+		Value:   cookie.Value,
+		Expires: time.Unix(0, 0), // Jan 1st 1970s
+		Path:    "/",
+		Secure:  true, // prevent warning: “SameSite” attribute set to “None” or an invalid value, without the “secure” attribute.
+	}
+	http.SetCookie(ctx.Response(), &newCookie)
+
+	return ctx.Redirect("/login")
+}
