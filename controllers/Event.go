@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 
@@ -17,19 +16,7 @@ import (
 )
 
 func NewEventController(ctx web.Context) error { // POST: /api/event/new
-	cookie, err := ctx.Request().Cookie("SESSION-ID")
-
-	// ErrNoCookie aka they not allowed
-	if err != nil {
-		ctx.SetStatus(403)
-		log.Println("No cookie found")
-		return ctx.RenderJson("Forbidden")
-	}
-
-	// Check if cookie value is in session manager
-	if Sessions[cookie.Value] == nil {
-		ctx.SetStatus(403)
-		fmt.Printf("No session found for: %s\n", cookie.Value)
+	if !RequestIsAuthorized(ctx) {
 		return ctx.RenderJson("Forbidden")
 	}
 
@@ -44,6 +31,7 @@ func NewEventController(ctx web.Context) error { // POST: /api/event/new
 	// Unmarhall json into event object
 	json.Unmarshal(buf, &newEvent)
 	// set user id
+	cookie, err := ctx.Request().Cookie("SESSION-ID")
 	newEvent.UserId = Sessions[cookie.Value]["id"]
 
 	// Insert event object into database
@@ -66,22 +54,54 @@ func NewEventController(ctx web.Context) error { // POST: /api/event/new
 	return ctx.RenderJson(respMsg)
 }
 
-func EventsController(ctx web.Context) error { // GET: /api/events
-	cookie, err := ctx.Request().Cookie("SESSION-ID")
+func UpdateEventController(ctx web.Context) error { // POST: /api/event/{id}
+	if !RequestIsAuthorized(ctx) {
+		return ctx.RenderJson("Forbidden")
+	}
 
-	// ErrNoCookie aka they not allowed
+	// Form response struct
+	type Message struct {
+		Message string `json:"message"`
+	}
+	var respMsg = Message{}
+	respMsg.Message = "success"
+
+	// Read request body to buffer and unmarshall
+	buf, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
+		log.Fatalf("Failed to read body to buffer: %s", err)
+	}
+	// Create event object
+	updatedEvent := models.Event{}
+	// Unmarhall json into event object
+	json.Unmarshal(buf, &updatedEvent)
+	// set user id
+	cookie, err := ctx.Request().Cookie("SESSION-ID")
+	updatedEvent.UserId = Sessions[cookie.Value]["id"]
+
+	// Update event object in database
+	col := db.GetEventCol()
+	objId, err := primitive.ObjectIDFromHex(ctx.Params()["id"])
+	var filter bson.M = bson.M{"_id": objId}
+	res, err := col.ReplaceOne(context.Background(), filter, updatedEvent)
+	if err != nil {
+		log.Fatalf("Failed to update event in database: %s", err)
+	}
+	if !(res.ModifiedCount > 0) {
+		respMsg.Message = "Failed to update event"
+	}
+
+	return ctx.RenderJson(respMsg)
+}
+
+func EventsController(ctx web.Context) error { // GET: /api/events
+	if !RequestIsAuthorized(ctx) {
 		ctx.SetStatus(403)
-		log.Println("No cookie found")
 		return ctx.RenderJson("Forbidden")
 	}
 
-	// Check if cookie value is in session manager
-	if Sessions[cookie.Value] == nil {
-		ctx.SetStatus(403)
-		fmt.Printf("No session found for: %s\n", cookie.Value)
-		return ctx.RenderJson("Forbidden")
-	}
+	// Get cookie
+	cookie, err := ctx.Request().Cookie("SESSION-ID")
 
 	// Get all events for user
 	col := db.GetEventCol()
@@ -98,24 +118,8 @@ func EventsController(ctx web.Context) error { // GET: /api/events
 
 // EventController: returns data from one specific event
 func EventController(ctx web.Context) error { // GET: /api/event/{id}
-	cookie, err := ctx.Request().Cookie("SESSION-ID")
-
-	// ErrNoCookie aka they not allowed
-	if err != nil {
+	if !RequestIsAuthorized(ctx) {
 		ctx.SetStatus(403)
-		log.Println("No cookie found")
-		return ctx.RenderJson("Forbidden")
-	}
-
-	// TODO
-	// Check if cookie value is in session manager
-	// tbh this is kinda bad for security but
-	// we'll fix it later. Not like ppl gonna
-	// bruteforce the session id ;)
-	// yes they will.
-	if Sessions[cookie.Value] == nil {
-		ctx.SetStatus(403)
-		fmt.Printf("No session found for: %s\n", cookie.Value)
 		return ctx.RenderJson("Forbidden")
 	}
 

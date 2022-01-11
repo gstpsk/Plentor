@@ -52,10 +52,10 @@ Hello, Zepto!
 <script type="text/babel">
     let tbs = [];
     window.onload = LoadEventData;
+    const id = window.location.pathname.split('/').pop();
 
     function LoadEventData() {
         console.log("Window is loaded!");
-        const id = window.location.pathname.split('/').pop();
         fetch(`/api/event/${id}`).then(response => {
             if (response.ok) {
                 return response.json();
@@ -162,9 +162,8 @@ Hello, Zepto!
     }
 
     function SubmitEventForm() {
-        const form = document.getElementById("NewEventForm");
+        const form = document.getElementById("UpdatedEventForm");
         let formData = new FormData(form);
-
         const obj = new Object();
         obj.name = formData.get("name");
         obj.location = formData.get("location");
@@ -177,9 +176,11 @@ Hello, Zepto!
             tb.until = document.querySelector(`#tb-${i.toString()} > div > div > div > select#until`).value;
             obj.timeblocks.push(tb);
         }
-        const json = JSON.stringify(obj);
 
-        fetch('/api/event/new', {
+        const json = JSON.stringify(obj);
+        const url = '/api/event/' + id;
+
+        fetch(url, {
             method: 'POST',
             body: json
         }).then(function (response) {
@@ -189,9 +190,10 @@ Hello, Zepto!
             return null;
         }).then(function (json) {
             if (json.message === "success") {
-                window.location = "/events";
+                window.location = "/dashboard";
             } else {
                 document.getElementById("errorMsg").innerHTML = json.message;
+                document.getElementById("errorMsg").classList.remove("visually-hidden");
             }
         }).catch(function (error) {
             console.error(error);

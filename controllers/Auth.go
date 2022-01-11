@@ -155,3 +155,28 @@ func LogoutPage(ctx web.Context) error {
 
 	return ctx.Redirect("/login")
 }
+
+func RequestIsAuthorized(ctx web.Context) bool {
+	cookie, err := ctx.Request().Cookie("SESSION-ID")
+
+	// ErrNoCookie aka they not allowed
+	if err != nil {
+		ctx.SetStatus(403)
+		log.Println("No cookie found")
+		return false
+	}
+
+	// TODO
+	// Check if cookie value is in session manager
+	// tbh this is kinda bad for security but
+	// we'll fix it later. Not like ppl gonna
+	// bruteforce the session id ;)
+	// yes they will.
+	if Sessions[cookie.Value] == nil {
+		ctx.SetStatus(403)
+		log.Printf("No session found for: %s\n", cookie.Value)
+		return false
+	}
+
+	return true
+}
