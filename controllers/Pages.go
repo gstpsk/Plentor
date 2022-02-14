@@ -40,3 +40,7 @@ func EventPage(ctx web.Context) error {
 	}
 	return ctx.Render("pages/event")
 }
+
+func EventSignupPage(ctx web.Context) error {
+	return ctx.Render("pages/event_signup")
+}

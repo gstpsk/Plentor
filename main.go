@@ -23,6 +23,7 @@ func main() {
 	z.Get("/dashboard", controllers.DashboardPage)
 	z.Get("/event/new", controllers.NewEventPage)
 	z.Get("/event/{id}", controllers.EventPage)
+	z.Get("/event/{id}/signup", controllers.EventSignupPage)
 
 	// API routes
 	z.Post("/api/login", controllers.LoginController)

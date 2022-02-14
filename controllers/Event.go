@@ -94,6 +94,7 @@ func UpdateEventController(ctx web.Context) error { // POST: /api/event/{id}
 	return ctx.RenderJson(respMsg)
 }
 
+// Returns all events for a specific user
 func EventsController(ctx web.Context) error { // GET: /api/events
 	if !RequestIsAuthorized(ctx) {
 		ctx.SetStatus(403)
@@ -118,7 +119,9 @@ func EventsController(ctx web.Context) error { // GET: /api/events
 
 // EventController: returns data from one specific event
 func EventController(ctx web.Context) error { // GET: /api/event/{id}
-	if !RequestIsAuthorized(ctx) {
+	// TODO
+	// This also rly bad for security
+	if false {
 		ctx.SetStatus(403)
 		return ctx.RenderJson("Forbidden")
 	}

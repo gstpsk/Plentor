@@ -15,31 +15,51 @@ Hello, Zepto!
             <button onclick="SubmitEventForm()" type="button" class="btn btn-primary">Opslaan</button>
         </div>
     </div>
-    <form id="UpdatedEventForm">
-        <div class="mb-3">
-            <label for="exampleFormControlInput1" class="form-label">Naam</label>
-            <input id="eventName" name="name" type="text" class="form-control" id="exampleFormControlInput1"
-                placeholder="Mentorgesprekken 5B" />
-        </div>
-        <div class="mb-3">
-            <label for="exampleFormControlInput1" class="form-label">Locatie</label>
-            <input id="eventLocation" name="location" type="text" class="form-control" id="exampleFormControlInput1"
-                placeholder="Lokaal 323" />
-        </div>
-        <div id="timeblockContainer" class="container p-0">
-            <div class="row align-items-center mb-4">
-                <div class="col-10">
-                    <p class="h5 m-0">Beschikbare tijdsvakken</p>
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button" role="tab" aria-controls="edit" aria-selected="true">Aanpassen</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="share-tab" data-bs-toggle="tab" data-bs-target="#share" type="button" role="tab" aria-controls="share" aria-selected="false">Uitnodigen</button>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active mt-4" id="edit" role="tabpanel" aria-labelledby="edit-tab">
+            <form id="UpdatedEventForm">
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class="form-label">Naam</label>
+                    <input id="eventName" name="name" type="text" class="form-control" id="exampleFormControlInput1"
+                        placeholder="Mentorgesprekken 5B" />
                 </div>
-                <div class="d-flex col-2 justify-content-end">
-                    <button onclick="AddTimeblock()" type="button" class="btn btn-primary btn-sm rounded-pill">
-                        <i class="bi-calendar-plus" style="font-size: 1.2rem; color: white"></i>
-                    </button>
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class="form-label">Locatie</label>
+                    <input id="eventLocation" name="location" type="text" class="form-control" id="exampleFormControlInput1"
+                        placeholder="Lokaal 323" />
                 </div>
+                <div id="timeblockContainer" class="container p-0">
+                    <div class="row align-items-center mb-4">
+                        <div class="col-10">
+                            <p class="h5 m-0">Beschikbare tijdsvakken</p>
+                        </div>
+                        <div class="d-flex col-2 justify-content-end">
+                            <button onclick="AddTimeblock()" type="button" class="btn btn-primary btn-sm rounded-pill">
+                                <i class="bi-calendar-plus" style="font-size: 1.2rem; color: white"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="timeblocks"></div>
+                </div>
+            </form>
+        </div>
+        <div class="tab-pane fade mt-4" id="share" role="tabpanel" aria-labelledby="share-tab">
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Link</label>
+                <input id="eventName" name="name" type="text" class="form-control" id="exampleFormControlInput1" />
+                <label class="text-muted">Let op: iedereen met deze link kan zich inschrijven voor deze bijeenkomst.</label>
             </div>
-            <div id="timeblocks"></div>
         </div>
-    </form>
+    </div>
+    
 </div>
 
 <style>
