@@ -1,13 +1,10 @@
-{% extends "../layouts/default.html" %}
-
-{% block title %}
-  Hello, Zepto!
-{% endblock %}
-
-{% block body %}
+{% extends "../layouts/default.html" %} {% block title %} Hello, Zepto! {% endblock %} {% block body %}
 <div class="container mt-5">
     <h1 class="text-start" id="eventHeader">Welkom!</h1>
-    <p class=""><b>Locatie</b>: <span class="badge rounded-pill bg-primary" id="locationPill"></span></p>
+    <p class="">
+        <b>Locatie</b>:
+        <span class="badge rounded-pill bg-primary" id="locationPill"></span>
+    </p>
     <p id="childInfoLabel"></p>
     <p class="lead">Selecteer een moment uit de volgende opties:</p>
     <div id="root"></div>
@@ -15,46 +12,66 @@
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">Welkom!</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Welkom!</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="recipient-name" class="col-form-label">Wat is de naam van uw kind?</label>
+                            <input type="text" class="form-control" id="child-name" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="recipient-name" class="col-form-label">In welke klas zit uw kind?</label>
+                            <input type="text" class="form-control" id="child-group" />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="dismissModal()">
+                        Opslaan
+                    </button>
+                </div>
             </div>
-            <div class="modal-body">
-                <form>
-                  <div class="mb-3">
-                    <label for="recipient-name" class="col-form-label">Wat is de naam van uw kind?</label>
-                    <input type="text" class="form-control" id="child-name">
-                  </div>
-                  <div class="mb-3">
-                    <label for="recipient-name" class="col-form-label">In welke klas zit uw kind?</label>
-                    <input type="text" class="form-control" id="child-group">
-                  </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="dismissModal()">Opslaan</button>
-            </div>
-        </div>
         </div>
     </div>
 </div>
 
 <script type="text/babel">
     // Some constants
-    const monthValues = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const monthValues = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    ];
     // Define our modal
-    var modal = new bootstrap.Modal(document.getElementById('exampleModal'), null);
-    
+    var modal = new bootstrap.Modal(
+        document.getElementById("exampleModal"),
+        null
+    );
+
     // Define our variables
     let datepicker = [];
     let name = "";
     let group = "";
     let months = [];
     let dates = {};
+    let currentFrom = 0;
+    let currentUntil = 0;
 
     // Get event ID from URL
-    const id = window.location.pathname.split('/').reverse()[1];
+    const id = window.location.pathname.split("/").reverse()[1];
 
     function init() {
         // Retrieve data about the event.
@@ -62,95 +79,230 @@
         // Show the modal when the page loads.
         modal.show();
     }
-    
+
     function dismissModal() {
         name = document.getElementById("child-name").value;
         group = document.getElementById("child-group").value;
         modal.hide();
         console.log(`Name: ${name}\n Class: ${group}`);
-        document.getElementById("childInfoLabel").innerHTML = `<b>Naam:</b> ${name}<br><b>Klas:</b> ${group}`
+        document.getElementById(
+            "childInfoLabel"
+        ).innerHTML = `<b>Naam:</b> ${name}<br><b>Klas:</b> ${group}`;
     }
 
     function getEventData() {
-        fetch(`/api/event/${id}`).then(response => {
-            if (response.ok) {
-                return response.json();
-            } else { throw Error("Failed to fetch event"); }
-        }).then(data => {
-            // Set event name
-            document.getElementById("eventHeader").innerHTML = data.name;
-            // Set event location
-            document.getElementById("locationPill").innerHTML = data.location;
-            // Determine which months and days to draw.
-            for (let tb of data.timeblocks) {
-                // Determine month
-                // Create the month if it doesnt exists
-                // add it to the month
-                // go to next item
-
-                // Parse the date of the timeblock
-                let tbdate = new Date(tb.date);
-
-                // Determine month
-                let tbmonth = tbdate.getMonth();
-                // Create the month if it doesn't already exist
-                if (dates[tbmonth] == null) {
-                    dates[tbmonth] = [];                    
+        fetch(`/api/event/${id}`)
+            .then((response) => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw Error("Failed to fetch event");
                 }
+            })
+            .then((data) => {
+                // Set event name
+                document.getElementById("eventHeader").innerHTML = data.name;
+                // Set event location
+                document.getElementById("locationPill").innerHTML = data.location;
+                // Determine which months and days to draw.
+                for (let tb of data.timeblocks) {
+                    // Determine month
+                    // Create the month if it doesnt exist
+                    // add it to the month
+                    // go to next item
 
-                // Add the date
-                dates[tbmonth].push(tbdate);
-            }
-            // Draw dates
-            DrawDates();
-        }).catch((error) => {
-            console.log(error);
-        });
+                    // Parse the date of the timeblock
+                    tb.date = new Date(tb.date);
+
+                    // Determine month
+                    let tbmonth = tb.date.getMonth();
+                    // Create the month if it doesn't already exist
+                    if (dates[tbmonth] == null) {
+                        dates[tbmonth] = [];
+                    }
+
+                    // Add the date
+                    dates[tbmonth].push(tb);
+                }
+                Draw();
+            })
+            .catch((error) => {
+                console.log(error);
+            });
     }
 
-    function DrawDates() {
-        // Iterate over dates object
-        // and draw each month
-        for (const month in dates) {
-            datepicker.push(<MonthArea number={month} key={month} />);
-            for (const date of dates[month]) {
-                datepicker.push(<DateBubble number={date.getDate()} />);
-            }     
+    function Draw() {
+        ReactDOM.render(<DateTimePicker />, document.getElementById("root"));
+    }
+
+    class DatePicker extends React.Component {
+        constructor(props) {
+            super(props);
         }
-        ReactDOM.render(<DatePicker />, document.getElementById("root"));
+
+        render() {
+            // Iterate over dates object
+            // and draw each month
+            // for (const tb of timeblocks) {
+            //     // Parse the date of the timeblock
+            //     let tbdate = new Date(tb.date);
+            //     // Determine month
+            //     let tbmonth = tbdate.getMonth();
+            //     // Create the month if it doesn't already exist
+            //     if (dates[tbmonth] == null) {
+            //         datepicker.push(<MonthArea number={month} key={month} />);
+            //     }
+            // }
+
+            for (const month in dates) {
+                datepicker.push(<MonthArea number={month} key={month} />);
+                // And add the days.
+                for (const tb of dates[month]) {
+                    console.log(tb);
+                    datepicker.push(
+                        <DateBubble
+                            toggleActiveView={this.props.toggleActiveView}
+                            date={tb.date}
+                            from={tb.from}
+                            until={tb.until}
+                            key={tb.date.getTime()}
+                        />
+                    );
+                }
+            }
+
+            return <React.Fragment>{datepicker}</React.Fragment>;
+        }
     }
 
-    function DatePicker(props) {
-        return <React.Fragment>{datepicker}</React.Fragment>;
+    class DateTimePicker extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = { dayViewIsActive: false };
+            this.toggleActiveView = this.toggleActiveView.bind(this);
+        }
+
+        toggleActiveView() {
+            // toggle te boolean based on the previous value,
+            // prevState cuz of asyncronous stuff.
+            this.setState((prevState) => {
+                return { dayViewIsActive: !prevState.dayViewIsActive };
+            });
+        }
+
+        render() {
+            if (this.state.dayViewIsActive) {
+                return <DayView />;
+            }
+
+            return <DatePicker toggleActiveView={this.toggleActiveView} />;
+        }
     }
 
     function MonthArea(props) {
-        return (
-            <h3 className="mt-3">{monthValues[props.number]}</h3>
-        )
+        return <h3 className="mt-3">{monthValues[props.number]}</h3>;
     }
 
-    function DateBubble(props) {
-        const bubbleStyle = {
-            width: '50px',
-            height: '50px',
-            backgroundColor: '#8E36DE',
-            color: 'white',
-            borderRadius: '50px'
-
+    class DateBubble extends React.Component {
+        constructor(props) {
+            super(props);
+            this.handleClick = this.handleClick.bind(this);
         }
-        return (
-            <div style={bubbleStyle} className="d-flex justify-content-center align-items-center" onClick={DateClicked}>{props.number}</div>
-        );
+
+        handleClick() {
+            currentFrom = parseInt(this.props.from);
+            currentUntil = parseInt(this.props.until);
+            this.props.toggleActiveView();
+        }
+
+        render() {
+            const bubbleStyle = {
+                width: "40px",
+                height: "40px",
+                backgroundColor: "#8E36DE",
+                color: "white",
+                borderRadius: "50px",
+            };
+
+            return (
+                <button
+                    style={bubbleStyle}
+                    className="btn btn-primary d-flex justify-content-center align-items-center"
+                    onClick={this.handleClick}
+                >
+                    {this.props.date.getDate()}
+                </button>
+            );
+        }
     }
 
-    function DateClicked() {
-        alert();
+    function DrawDayView() {
+        ReactDOM.render(<DayView />, document.getElementById("dayView"));
     }
-    
+
+    class DayView extends React.Component {
+        constructor(props) {
+            super(props);
+        }
+
+        render() {
+
+            let arr = [];
+            
+            for (let i = 0; i < 100; i++) {
+                arr.push(<MeetingBubble hour={currentFrom + i} key={currentFrom + i} />);
+            }
+
+            return (
+                <div className="container">
+                    <div className="row justify-content-evenly">
+                        {arr}
+                    </div>
+                </div>
+            );
+        }
+    }
+
+    class MeetingBubble extends React.Component {
+        constructor(props) {
+            super(props);
+        }
+
+        render() {
+            const bubbleStyle = {
+                backgroundColor: "#8E36DE",
+                color: "white",
+                width: '200px',
+                height: '100px',
+                borderRadius: '500px',
+                marginBottom: '20px',
+            }
+
+            let hourString = "";
+            if (this.props.hour.length == 1) {
+                hourString = `0${this.props.hour}:00`;
+            } else {
+                hourString = `${this.props.hour}:00`;
+            }   
+             
+
+            return (
+                <div style={bubbleStyle} className="d-flex col-6 justify-content-center align-items-center">
+                    <p className="lead text-center m-0">{hourString} - {hourString}</p>
+                </div>
+            )
+        }
+    }
+
+    function OpenDayView(num) {
+        console.log(num);
+        //document.getElementById("monthView").classList.add("visually-hidden");
+        //document.getElementById("dayView").classList.remove("visually-hidden");
+        //DrawDayView();
+    }
+
     //ReactDOM.render(<DatePicker />, document.getElementById('root'));
 
-    
     window.onload = init;
 </script>
 

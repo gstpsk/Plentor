@@ -17,24 +17,51 @@ Hello, Zepto!
     </div>
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button" role="tab" aria-controls="edit" aria-selected="true">Aanpassen</button>
+            <button class="nav-link active" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button"
+                role="tab" aria-controls="edit" aria-selected="true">Aanpassen</button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link" id="share-tab" data-bs-toggle="tab" data-bs-target="#share" type="button" role="tab" aria-controls="share" aria-selected="false">Uitnodigen</button>
+            <button class="nav-link" id="share-tab" data-bs-toggle="tab" data-bs-target="#share" type="button"
+                role="tab" aria-controls="share" aria-selected="false">Uitnodigen</button>
         </li>
     </ul>
     <div class="tab-content" id="myTabContent">
         <div class="tab-pane fade show active mt-4" id="edit" role="tabpanel" aria-labelledby="edit-tab">
             <form id="UpdatedEventForm">
+
                 <div class="mb-3">
-                    <label for="exampleFormControlInput1" class="form-label">Naam</label>
-                    <input id="eventName" name="name" type="text" class="form-control" id="exampleFormControlInput1"
+                    <label class="form-label">Naam</label>
+                    <input id="eventName" name="name" type="text" class="form-control"
                         placeholder="Mentorgesprekken 5B" />
                 </div>
+
                 <div class="mb-3">
-                    <label for="exampleFormControlInput1" class="form-label">Locatie</label>
-                    <input id="eventLocation" name="location" type="text" class="form-control" id="exampleFormControlInput1"
+                    <label class="form-label">Locatie</label>
+                    <input id="eventLocation" name="location" type="text" class="form-control"
                         placeholder="Lokaal 323" />
+                </div>
+
+                <div class="row mb-3">
+                    
+                    <div class="col mb-3">
+                        <label class="form-label">Gespreksduratie</label>
+                        <div class="input-group">
+                            <input id="eventLocation" name="location" type="text" class="form-control" placeholder="15">
+                            <span class="input-group-text">minuten</span>
+                        </div>
+                        <label class="form-label text-muted">De gemiddelde tijd dat één gesprek kost.</label>
+                    </div>
+
+                    <div class="col mb-3">
+                        <label class="form-label">Tijd tussen gesprekken</label>
+                        <div class="input-group">
+                            <input id="eventLocation" name="location" type="text" class="form-control" placeholder="5">
+                            <span class="input-group-text">minuten</span>
+                        </div>
+                        <label class="form-label text-muted">De tijd vanaf de afloop van een gesprek tot het volgende
+                            gesprek.</label>
+                    </div>
+                    
                 </div>
                 <div id="timeblockContainer" class="container p-0">
                     <div class="row align-items-center mb-4">
@@ -54,12 +81,13 @@ Hello, Zepto!
         <div class="tab-pane fade mt-4" id="share" role="tabpanel" aria-labelledby="share-tab">
             <div class="mb-3">
                 <label for="exampleFormControlInput1" class="form-label">Link</label>
-                <input id="eventName" name="name" type="text" class="form-control" id="exampleFormControlInput1" />
-                <label class="text-muted">Let op: iedereen met deze link kan zich inschrijven voor deze bijeenkomst.</label>
+                <input id="eventLink" name="name" type="text" class="form-control" />
+                <label class="text-muted">Let op: iedereen met deze link kan zich inschrijven voor deze
+                    bijeenkomst.</label>
             </div>
         </div>
     </div>
-    
+
 </div>
 
 <style>
@@ -76,6 +104,7 @@ Hello, Zepto!
 
     function LoadEventData() {
         console.log("Window is loaded!");
+        document.getElementById("eventLink").value = window.location + "/signup";
         fetch(`/api/event/${id}`).then(response => {
             if (response.ok) {
                 return response.json();
@@ -143,7 +172,7 @@ Hello, Zepto!
                     <div className="card-body row">
                         <div className="col-11">
                             Op <input id="date" type="date" defaultValue={props.date} /> ben ik beschikbaar van <span />
-                            <TimeDropdown id="from"  />
+                            <TimeDropdown id="from" />
                             <span /> tot <span />
                             <TimeDropdown id="until" />
                         </div>
