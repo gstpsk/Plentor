@@ -9,7 +9,7 @@
     <h1 class="text-start" id="eventHeader">Welkom!</h1>
     <p class=""><b>Locatie</b>: <span class="badge rounded-pill bg-primary" id="locationPill"></span></p>
     <p id="childInfoLabel"></p>
-    <p class="lead">Selecteer een datum uit de volgende opties:</p>
+    <p class="lead">Selecteer een moment uit de volgende opties:</p>
     <div id="root"></div>
 
     <!-- Modal -->
@@ -93,7 +93,6 @@
 
                 // Determine month
                 let tbmonth = tbdate.getMonth();
-
                 // Create the month if it doesn't already exist
                 if (dates[tbmonth] == null) {
                     dates[tbmonth] = [];                    
@@ -113,9 +112,12 @@
         // Iterate over dates object
         // and draw each month
         for (const month in dates) {
-            console.log(monthValues[month]);
-            return <MonthArea number={monthValues[month]} />            
+            datepicker.push(<MonthArea number={month} key={month} />);
+            for (const date of dates[month]) {
+                datepicker.push(<DateBubble number={date.getDate()} />);
+            }     
         }
+        ReactDOM.render(<DatePicker />, document.getElementById("root"));
     }
 
     function DatePicker(props) {
@@ -124,7 +126,7 @@
 
     function MonthArea(props) {
         return (
-            <h3>{monthValues[props.number]}</h3>
+            <h3 className="mt-3">{monthValues[props.number]}</h3>
         )
     }
 
@@ -134,15 +136,19 @@
             height: '50px',
             backgroundColor: '#8E36DE',
             color: 'white',
-            borderRadius: '5px'
+            borderRadius: '50px'
 
         }
         return (
-            <div style={bubbleStyle} className="d-flex justify-content-center align-items-center">{props.number}</div>
+            <div style={bubbleStyle} className="d-flex justify-content-center align-items-center" onClick={DateClicked}>{props.number}</div>
         );
     }
+
+    function DateClicked() {
+        alert();
+    }
     
-    ReactDOM.render(<DatePicker />, document.getElementById('root'));
+    //ReactDOM.render(<DatePicker />, document.getElementById('root'));
 
     
     window.onload = init;
