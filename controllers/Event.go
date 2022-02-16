@@ -26,28 +26,34 @@ func NewEventController(ctx web.Context) error { // POST: /api/event/new
 		log.Fatalf("Failed to read body to buffer: %s", err)
 	}
 
-	// Create event object
+	// Create the Event object
 	newEvent := models.Event{}
-	// Unmarhall json into event object
-	json.Unmarshal(buf, &newEvent)
-	// set user id
+
+	// Unmarhall json into the Event object
+	err = json.Unmarshal(buf, &newEvent)
+	if err != nil {
+		log.Fatalf("Failed to unmarshall JSON: %s", err)
+	}
+
+	// Set the user id
 	cookie, err := ctx.Request().Cookie("SESSION-ID")
 	newEvent.UserId = Sessions[cookie.Value]["id"]
 
-	// Insert event object into database
+	// Insert the Event object into the database
 	col := db.GetEventCol()
 	res, err := col.InsertOne(context.Background(), newEvent)
 	if err != nil {
 		log.Fatalf("Failed to insert event into database: %s", err)
 	}
 
-	// Form response struct
+	// Form a response struct
 	type Message struct {
 		Message string `json:"message"`
 		Id      string `json:"id"`
 	}
 	var respMsg = Message{}
 	respMsg.Message = "success"
+	// Give it the ObjectID of the previously created Event.
 	respMsg.Id = res.InsertedID.(primitive.ObjectID).Hex()
 
 	// return

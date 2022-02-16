@@ -42,11 +42,12 @@ Hello, Zepto!
                 </div>
 
                 <div class="row mb-3">
-                    
+
                     <div class="col mb-3">
                         <label class="form-label">Gespreksduratie</label>
                         <div class="input-group">
-                            <input id="eventLocation" name="location" type="text" class="form-control" placeholder="15">
+                            <input id="meetingDurationInMinutes" name="meetingDurationInMinutes" type="number"
+                                class="form-control" placeholder="15">
                             <span class="input-group-text">minuten</span>
                         </div>
                         <label class="form-label text-muted">De gemiddelde tijd dat één gesprek kost.</label>
@@ -55,13 +56,14 @@ Hello, Zepto!
                     <div class="col mb-3">
                         <label class="form-label">Tijd tussen gesprekken</label>
                         <div class="input-group">
-                            <input id="eventLocation" name="location" type="text" class="form-control" placeholder="5">
+                            <input id="breakDurationInMinutes" name="breakDurationInMinutes" type="number"
+                                class="form-control" placeholder="5">
                             <span class="input-group-text">minuten</span>
                         </div>
                         <label class="form-label text-muted">De tijd vanaf de afloop van een gesprek tot het volgende
                             gesprek.</label>
                     </div>
-                    
+
                 </div>
                 <div id="timeblockContainer" class="container p-0">
                     <div class="row align-items-center mb-4">
@@ -101,6 +103,11 @@ Hello, Zepto!
     let tbs = [];
     window.onload = LoadEventData;
     const id = window.location.pathname.split('/').pop();
+    // Make sure people don't navigate
+    // away from the page accidentally
+    window.onbeforeunload = function () {
+        return true;
+    };
 
     function LoadEventData() {
         console.log("Window is loaded!");
@@ -110,14 +117,19 @@ Hello, Zepto!
                 return response.json();
             } else { throw Error("Failed to fetch event"); }
         }).then(data => {
-            console.log(data);
-            // Get our eventContainer
+
             const et = document.getElementById("eventTitle");
             const en = document.getElementById("eventName");
             const el = document.getElementById("eventLocation");
+            const mdim = document.getElementById("meetingDurationInMinutes");
+            const bdim = document.getElementById("breakDurationInMinutes");
+
             et.innerText = data.name;
             en.value = data.name;
             el.value = data.location;
+            mdim.value = data.meetingDurationInMinutes;
+            bdim.value = data.breakDurationInMinutes;
+
             let i = 0;
             for (let tb of data.timeblocks) {
                 AddTimeblock(tb.date);
@@ -213,11 +225,15 @@ Hello, Zepto!
     function SubmitEventForm() {
         const form = document.getElementById("UpdatedEventForm");
         let formData = new FormData(form);
+
         const obj = new Object();
         obj.name = formData.get("name");
         obj.location = formData.get("location");
+        obj.meetingDurationInMinutes = parseInt(formData.get("meetingDurationInMinutes"));
+        obj.breakDurationInMinutes = parseInt(formData.get("breakDurationInMinutes"));
         obj.timeblocks = [];
 
+        // Add timeblocks to the object.
         for (let i = 0; i < tbs.length; i++) {
             const tb = new Object();
             tb.date = document.querySelector(`#tb-${i.toString()} > div > div > div > input`).value;
@@ -238,8 +254,11 @@ Hello, Zepto!
             }
             return null;
         }).then(function (json) {
+            console.log(json);
             if (json.message === "success") {
-                window.location = "/dashboard";
+                // Disable beforeunload block
+                window.onbeforeunload = null;
+                window.location.reload();
             } else {
                 document.getElementById("errorMsg").innerHTML = json.message;
                 document.getElementById("errorMsg").classList.remove("visually-hidden");

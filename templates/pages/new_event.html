@@ -18,23 +18,22 @@ Hello, Zepto!
     <form id="NewEventForm">
 
         <div class="mb-3">
-            <label for="exampleFormControlInput1" class="form-label">Naam</label>
-            <input name="name" type="text" class="form-control" id="exampleFormControlInput1"
-                placeholder="Mentorgesprekken 5B" />
+            <label class="form-label">Naam</label>
+            <input name="name" type="text" class="form-control" placeholder="Mentorgesprekken 5B" />
         </div>
 
         <div class="mb-3">
-            <label for="exampleFormControlInput1" class="form-label">Locatie</label>
-            <input name="location" type="text" class="form-control" id="exampleFormControlInput1"
-                placeholder="Lokaal 323" />
+            <label class="form-label">Locatie</label>
+            <input name="location" type="text" class="form-control" placeholder="Lokaal 323" />
         </div>
 
         <div class="row mb-3">
-                    
+
             <div class="col mb-3">
                 <label class="form-label">Gespreksduratie</label>
                 <div class="input-group">
-                    <input id="eventLocation" name="meetingDurationInMinutes" type="text" class="form-control" placeholder="15">
+                    <input id="meetingDurationInMinutes" name="meetingDurationInMinutes" type="number"
+                        class="form-control" placeholder="15">
                     <span class="input-group-text">minuten</span>
                 </div>
                 <label class="form-label text-muted">De gemiddelde tijd dat één gesprek kost.</label>
@@ -43,13 +42,14 @@ Hello, Zepto!
             <div class="col mb-3">
                 <label class="form-label">Tijd tussen gesprekken</label>
                 <div class="input-group">
-                    <input id="eventLocation" name="breakDurationInMinutes" type="text" class="form-control" placeholder="5">
+                    <input id="breakDurationInMinutes" name="breakDurationInMinutes" type="number" class="form-control"
+                        placeholder="5">
                     <span class="input-group-text">minuten</span>
                 </div>
                 <label class="form-label text-muted">De tijd vanaf de afloop van een gesprek tot het volgende
                     gesprek.</label>
             </div>
-            
+
         </div>
 
         <div id="timeblockContainer" class="container p-0">
@@ -78,6 +78,11 @@ Hello, Zepto!
 
 <script type="text/babel">
     let tbs = [];
+    // Make sure people don't navigate
+    // away from the page accidentally
+    window.onbeforeunload = function () {
+        return true;
+    };
 
     function TimeDropdown(props) {
         return (
@@ -166,9 +171,10 @@ Hello, Zepto!
         const obj = new Object();
         obj.name = formData.get("name");
         obj.location = formData.get("location");
-        obj.meetingDurationInMinutes = formData.get("meetingDurationInMinutes");
-        obj.breakDurationInMinutes = formData.get("breakDurationInMinutes");
+        obj.meetingDurationInMinutes = parseInt(formData.get("meetingDurationInMinutes"));
+        obj.breakDurationInMinutes = parseInt(formData.get("breakDurationInMinutes"));
         obj.timeblocks = [];
+
         // Add timeblocks to object.
         for (let i = 0; i < tbs.length; i++) {
             const tb = new Object();
@@ -177,7 +183,9 @@ Hello, Zepto!
             tb.until = document.querySelector(`#tb-${i.toString()} > div > div > div > select#until`).value;
             obj.timeblocks.push(tb);
         }
+
         const json = JSON.stringify(obj);
+        console.log(json);
 
         fetch('/api/event/new', {
             method: 'POST',
@@ -189,7 +197,9 @@ Hello, Zepto!
             return null;
         }).then(function (json) {
             if (json.message === "success") {
-                window.location = "/dashboard";
+                // Disable beforeunload block
+                window.onbeforeunload = null;
+                window.location = "/event/" + json.id;
             } else {
                 document.getElementById("errorMsg").innerHTML = json.message;
             }
