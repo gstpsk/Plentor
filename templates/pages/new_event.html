@@ -16,16 +16,42 @@ Hello, Zepto!
         </div>
     </div>
     <form id="NewEventForm">
+
         <div class="mb-3">
             <label for="exampleFormControlInput1" class="form-label">Naam</label>
             <input name="name" type="text" class="form-control" id="exampleFormControlInput1"
                 placeholder="Mentorgesprekken 5B" />
         </div>
+
         <div class="mb-3">
             <label for="exampleFormControlInput1" class="form-label">Locatie</label>
             <input name="location" type="text" class="form-control" id="exampleFormControlInput1"
                 placeholder="Lokaal 323" />
         </div>
+
+        <div class="row mb-3">
+                    
+            <div class="col mb-3">
+                <label class="form-label">Gespreksduratie</label>
+                <div class="input-group">
+                    <input id="eventLocation" name="meetingDurationInMinutes" type="text" class="form-control" placeholder="15">
+                    <span class="input-group-text">minuten</span>
+                </div>
+                <label class="form-label text-muted">De gemiddelde tijd dat één gesprek kost.</label>
+            </div>
+
+            <div class="col mb-3">
+                <label class="form-label">Tijd tussen gesprekken</label>
+                <div class="input-group">
+                    <input id="eventLocation" name="breakDurationInMinutes" type="text" class="form-control" placeholder="5">
+                    <span class="input-group-text">minuten</span>
+                </div>
+                <label class="form-label text-muted">De tijd vanaf de afloop van een gesprek tot het volgende
+                    gesprek.</label>
+            </div>
+            
+        </div>
+
         <div id="timeblockContainer" class="container p-0">
             <div class="row align-items-center mb-4">
                 <div class="col-10">
@@ -39,6 +65,7 @@ Hello, Zepto!
             </div>
             <div id="timeblocks"></div>
         </div>
+
     </form>
 </div>
 
@@ -139,8 +166,10 @@ Hello, Zepto!
         const obj = new Object();
         obj.name = formData.get("name");
         obj.location = formData.get("location");
+        obj.meetingDurationInMinutes = formData.get("meetingDurationInMinutes");
+        obj.breakDurationInMinutes = formData.get("breakDurationInMinutes");
         obj.timeblocks = [];
-
+        // Add timeblocks to object.
         for (let i = 0; i < tbs.length; i++) {
             const tb = new Object();
             tb.date = document.querySelector(`#tb-${i.toString()} > div > div > div > input`).value;
