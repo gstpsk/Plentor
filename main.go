@@ -26,12 +26,20 @@ func main() {
 	z.Get("/event/{id}/signup", controllers.EventSignupPage)
 
 	// API routes
+
+	// Auth
 	z.Post("/api/login", controllers.LoginController)
 	z.Post("/api/register", controllers.RegisterController)
+
+	// Events
 	z.Post("/api/event/new", controllers.NewEventController)
 	z.Post("/api/event/{id}", controllers.UpdateEventController)
 	z.Get("/api/events", controllers.EventsController)
 	z.Get("/api/event/{id}", controllers.EventController)
+
+	// Registrations
+	z.Post("/api/registration/new", controllers.NewRegistrationController)
+	z.Get("/api/registrations/{event_id}", controllers.RegistrationsController)
 
 	z.Start()
 }

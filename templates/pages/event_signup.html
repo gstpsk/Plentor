@@ -1,5 +1,6 @@
 {% extends "../layouts/default.html" %} {% block title %} Hello, Zepto! {% endblock %} {% block body %}
 <div class="container mt-5">
+    <div id="errorMsg" class="alert alert-danger visually-hidden" role="alert"></div>
     <h1 class="text-start" id="eventHeader">Welkom!</h1>
     <p class="">
         <b>Locatie</b>:
@@ -10,7 +11,7 @@
     <div id="root"></div>
 
     <!-- Modal -->
-    <div class="modal fade" id="modal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="greeterModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -37,6 +38,29 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Weet je het zeker?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Afspraak op: <span id="modalDateString"></span></p>
+                    <p>van: <span id="modalTimeString"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="SubmitRegistration()">
+                        Ja
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="confirmationModal.hide()">
+                        Nee
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script type="text/babel">
@@ -55,9 +79,16 @@
         "November",
         "December",
     ];
-    // Define our modal
-    var modal = new bootstrap.Modal(
-        document.getElementById("modal"),
+
+    // Define our greeter modal
+    var greeterModal = new bootstrap.Modal(
+        document.getElementById("greeterModal"),
+        null
+    );
+
+    // Define our confirmation modal.
+    var confirmationModal = new bootstrap.Modal(
+        document.getElementById("confirmationModal"),
         null
     );
 
@@ -69,6 +100,10 @@
     let dates = {};
     let currentFrom = 0;
     let currentUntil = 0;
+    let currentDate = new Date();
+    let meetingDurationInMinutes = 0;
+    let breakDurationInMinutes = 0;
+    let dateString = `${currentDate.getDate()} ${monthValues[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
 
     // Get event ID from URL
     const id = window.location.pathname.split("/").reverse()[1];
@@ -77,14 +112,13 @@
         // Retrieve data about the event.
         getEventData();
         // Show the modal when the page loads.
-        modal.show();
+        greeterModal.show();
     }
 
     function dismissModal() {
         name = document.getElementById("child-name").value;
         group = document.getElementById("child-group").value;
-        modal.hide();
-        console.log(`Name: ${name}\n Class: ${group}`);
+        greeterModal.hide();
         document.getElementById(
             "childInfoLabel"
         ).innerHTML = `<b>Naam:</b> ${name}<br><b>Klas:</b> ${group}`;
@@ -104,6 +138,9 @@
                 document.getElementById("eventHeader").innerHTML = data.name;
                 // Set event location
                 document.getElementById("locationPill").innerHTML = data.location;
+                // Set durations
+                meetingDurationInMinutes = data.meetingDurationInMinutes;
+                breakDurationInMinutes = data.breakDurationInMinutes;
                 // Determine which months and days to draw.
                 for (let tb of data.timeblocks) {
                     // Determine month
@@ -121,7 +158,7 @@
                         dates[tbmonth] = [];
                     }
 
-                    // Add the date
+                    // Add the timeblock
                     dates[tbmonth].push(tb);
                 }
                 Draw();
@@ -141,25 +178,17 @@
         }
 
         render() {
-            // Iterate over dates object
-            // and draw each month
-            // for (const tb of timeblocks) {
-            //     // Parse the date of the timeblock
-            //     let tbdate = new Date(tb.date);
-            //     // Determine month
-            //     let tbmonth = tbdate.getMonth();
-            //     // Create the month if it doesn't already exist
-            //     if (dates[tbmonth] == null) {
-            //         datepicker.push(<MonthArea number={month} key={month} />);
-            //     }
-            // }
-
+            let i = 0;
             for (const month in dates) {
+                i++;
+                // Add the month header
                 datepicker.push(<MonthArea number={month} key={month} />);
-                // And add the days.
+                // Create array of buttons
+                let dbArr = [];
+                // And add the days to the array.
                 for (const tb of dates[month]) {
                     console.log(tb);
-                    datepicker.push(
+                    dbArr.push(
                         <DateBubble
                             toggleActiveView={this.props.toggleActiveView}
                             date={tb.date}
@@ -169,6 +198,8 @@
                         />
                     );
                 }
+                // Add the array to a row
+                datepicker.push(<div className="row justify-content-start m-0" key={i + 69}>{dbArr}</div>);
             }
 
             return <React.Fragment>{datepicker}</React.Fragment>;
@@ -212,6 +243,7 @@
         handleClick() {
             currentFrom = parseInt(this.props.from);
             currentUntil = parseInt(this.props.until);
+            currentDate = this.props.date;
             this.props.toggleActiveView();
         }
 
@@ -222,12 +254,13 @@
                 backgroundColor: "#8E36DE",
                 color: "white",
                 borderRadius: "50px",
+                flex: 0,
             };
 
             return (
                 <button
                     style={bubbleStyle}
-                    className="btn btn-primary d-flex justify-content-center align-items-center"
+                    className="btn btn-primary d-flex justify-content-center align-items-center col me-3"
                     onClick={this.handleClick}
                 >
                     {this.props.date.getDate()}
@@ -248,14 +281,23 @@
         render() {
 
             let arr = [];
-            
-            for (let i = 0; i < 100; i++) {
-                arr.push(<MeetingBubble hour={currentFrom + i} key={currentFrom + i} />);
+
+            let amountOfHours = currentUntil - currentFrom;
+            let amountOfMeetings = amountOfHours * 60 / (meetingDurationInMinutes + breakDurationInMinutes);
+            currentDate.setHours(currentFrom);
+
+            for (let i = 0; i < amountOfMeetings; i++) {
+                let from = new Date(currentDate.getTime());
+                from.setMinutes(from.getMinutes() + i * (meetingDurationInMinutes + breakDurationInMinutes));
+                let until = new Date(from.getTime());
+                until.setMinutes(until.getMinutes() + meetingDurationInMinutes);
+                arr.push(<MeetingBubble from={from} until={until} key={currentFrom + i} />);
             }
 
             return (
                 <div className="container">
                     <div className="row justify-content-evenly">
+                        <h3 className="p-0 mb-3">{dateString}</h3>
                         {arr}
                     </div>
                 </div>
@@ -266,6 +308,21 @@
     class MeetingBubble extends React.Component {
         constructor(props) {
             super(props);
+            this.handleClick = this.handleClick.bind(this);
+            this.durationString = "";
+        }
+
+        handleClick() {
+            // Set modal values
+            let mds = document.getElementById("modalDateString");
+            let mts = document.getElementById("modalTimeString");
+            mds.innerText = dateString;
+            mts.innerText = this.durationString;
+
+            // Show modal asking if you're sure
+            confirmationModal.show();
+
+            // Submit data on agree
         }
 
         render() {
@@ -273,27 +330,67 @@
                 backgroundColor: "#8E36DE",
                 color: "white",
                 width: '200px',
-                height: '100px',
+                height: '80px',
                 borderRadius: '500px',
                 marginBottom: '20px',
             }
 
-            let hourString = "";
-            if (this.props.hour.length == 1) {
-                hourString = `0${this.props.hour}:00`;
-            } else {
-                hourString = `${this.props.hour}:00`;
-            }   
-             
+            //let durationString = "";
+            this.durationString = this.durationString + this.props.from.getHours() + ":" + this.props.from.getMinutes();
+
+            // Pad with zeroes
+            if (this.props.from.getMinutes().toString().length < 2) {
+                this.durationString = this.durationString + "0";
+            }
+
+            // Pad with zeroes
+            this.durationString = this.durationString + " - " + this.props.until.getHours() + ":" + this.props.until.getMinutes();
+            if (this.props.until.getMinutes().toString().length < 2) {
+                this.durationString = this.durationString + "0";
+            }
 
             return (
-                <div style={bubbleStyle} className="d-flex col-6 justify-content-center align-items-center">
-                    <p className="lead text-center m-0">{hourString} - {hourString}</p>
+                <div style={bubbleStyle} className="d-flex col-6 justify-content-center align-items-center" onClick={this.handleClick}>
+                    <p className="lead text-center m-0">{this.durationString}</p>
                 </div>
             )
         }
     }
-    
+
+    function SubmitRegistration() {
+        const obj = new Object();
+        obj.event_id = id;
+        obj.name = document.getElementById("child-name").value;
+        // TODO:
+        // make this good lol
+        obj.date = currentDate.getFullYear() + '-' + currentDate.getMonth() + '-' + currentDate.getDay(); // yyyy-MM-dd
+        let dur = document.getElementById("modalTimeString").innerText.replace(/ /g, '').split('-');
+        obj.from = dur[0]; // HH:mm
+        obj.until = dur[1]; // HH:mm
+
+        const json = JSON.stringify(obj);
+        const url = '/api/registration/new';
+
+        fetch(url, {
+            method: 'POST',
+            body: json
+        }).then(function (resp) {
+            if (resp.ok) {
+                return resp.json();
+            }
+            return null;
+        }).then(function (json) {
+            console.log(json);
+            if (json.message === "success") {
+                //
+                alert("good shit mate!!!!!!");
+            } else {
+                document.getElementById("errorMsg").innerHTML = json.message;
+                document.getElementById("errorMsg").classList.remove("visually-hidden");
+            }
+        })
+    }
+
     window.onload = init;
 </script>
 

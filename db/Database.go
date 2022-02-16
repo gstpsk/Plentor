@@ -37,3 +37,9 @@ func GetEventCol() *mongo.Collection {
 	collection := client.Database("Plentor").Collection("events")
 	return collection
 }
+
+func GetRegistrationCol() *mongo.Collection {
+	client := Connect()
+	collection := client.Database("Plentor").Collection("registrations")
+	return collection
+}
