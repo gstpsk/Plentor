@@ -87,6 +87,12 @@ Hello, Zepto!
                 <label class="text-muted">Let op: iedereen met deze link kan zich inschrijven voor deze
                     bijeenkomst.</label>
             </div>
+            <div class="mb-3">
+                <p class="">Ingeschreven</p>
+                <div id="registrationTableDiv">
+                    <p class="text-muted">Niemand heeft zich nog ingeschreven voor deze bijeenkomst.</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -101,13 +107,19 @@ Hello, Zepto!
 
 <script type="text/babel">
     let tbs = [];
-    window.onload = LoadEventData;
+    //let existingRegistrations = [];
+    window.onload = init;
     const id = window.location.pathname.split('/').pop();
     // Make sure people don't navigate
     // away from the page accidentally
     window.onbeforeunload = function () {
         return true;
     };
+
+    function init() {
+        LoadEventData();
+        ReactDOM.render(<RegistrationTable />, document.getElementById("registrationTableDiv"));
+    }
 
     function LoadEventData() {
         console.log("Window is loaded!");
@@ -266,6 +278,73 @@ Hello, Zepto!
         }).catch(function (error) {
             console.error(error);
         })
+    }
+
+    function LoadRegistrations() {
+        const url = '/api/registrations/' + id;
+
+        return fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                return data;
+            })
+            .catch((error) => {
+                console.error(error)
+            });
+    }
+
+    class RegistrationTable extends React.Component {
+        constructor(props) {
+            super(props)
+            this.state = { registrationRowArray: [] }
+        }
+
+        componentDidMount() {
+            LoadRegistrations().then(value => {
+                for (const reg of value) {
+                    this.setState({ registrationRowArray: [...this.state.registrationRowArray, <RegistrationRow num={this.state.registrationRowArray.length + 1} name={reg.name} date={reg.date} time={reg.from + ' - ' + reg.until} key={this.state.registrationRowArray.length} />]});
+                }
+            })
+        }
+
+        render() {            
+            console.log("ayo:", this.state.registrationRowArray.length);
+            return (
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Naam</th>
+                            <th scope="col">Datum</th>
+                            <th scope="col">Tijdstip</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {this.state.registrationRowArray}
+                    </tbody>
+                </table>
+            )
+        }
+    }
+
+    class RegistrationRow extends React.Component {
+        constructor(props) {
+            super(props)
+        }
+
+        render() {
+            console.log(this.date);
+
+            return (
+                <tr>
+                    <th scope="row">{this.props.num}</th>
+                    <td>{this.props.name}</td>
+                    <td>{this.props.date}</td>
+                    <td>{this.props.time}</td>
+                </tr>
+            )
+        }
+
     }
 </script>
 

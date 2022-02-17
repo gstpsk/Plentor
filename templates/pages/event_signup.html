@@ -76,14 +76,14 @@
 
     // Some constants
     const monthValues = [
-        "January",
-        "February",
-        "March",
+        "Januari",
+        "Februari",
+        "Maart",
         "April",
-        "May",
-        "June",
-        "July",
-        "August",
+        "Mei",
+        "Juni",
+        "Juli",
+        "Augustus",
         "September",
         "October",
         "November",
@@ -127,7 +127,7 @@
         // Retrieve data about the event.
         getEventData();
         // Show the modal when the page loads.
-        //greeterModal.show();
+        greeterModal.show();
     }
 
     function dismissModal() {
@@ -348,6 +348,7 @@
             // Temp array to store meetings
             let meetingBubbleArray = [];
 
+            // shitty math
             let amountOfHours = currentUntil - currentFrom;
             let amountOfMeetings = amountOfHours * 60 / (meetingDurationInMinutes + breakDurationInMinutes);
             currentDate.setHours(currentFrom);
