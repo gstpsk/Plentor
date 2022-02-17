@@ -101,9 +101,14 @@
     let currentFrom = 0;
     let currentUntil = 0;
     let currentDate = new Date();
+    let existingRegistrations = [];
     let meetingDurationInMinutes = 0;
     let breakDurationInMinutes = 0;
-    let dateString = `${currentDate.getDate()} ${monthValues[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+    //let dateString = `${currentDate.getDate()} ${monthValues[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+
+    function GetDateString(date) {
+        return `${date.getDate()} ${monthValues[date.getMonth()]} ${date.getFullYear()}`;
+    }
 
     // Get event ID from URL
     const id = window.location.pathname.split("/").reverse()[1];
@@ -112,7 +117,7 @@
         // Retrieve data about the event.
         getEventData();
         // Show the modal when the page loads.
-        greeterModal.show();
+        //greeterModal.show();
     }
 
     function dismissModal() {
@@ -187,7 +192,6 @@
                 let dbArr = [];
                 // And add the days to the array.
                 for (const tb of dates[month]) {
-                    console.log(tb);
                     dbArr.push(
                         <DateBubble
                             toggleActiveView={this.props.toggleActiveView}
@@ -211,9 +215,13 @@
             super(props);
             this.state = { dayViewIsActive: false };
             this.toggleActiveView = this.toggleActiveView.bind(this);
+            //this.existingRegistrations = [];
         }
 
         toggleActiveView() {
+            // Make request to retrieve existing registrations
+            LoadRegistrations().then(console.log(existingRegistrations));
+            //console.log(existingRegistrations);
             // toggle te boolean based on the previous value,
             // prevState cuz of asyncronous stuff.
             this.setState((prevState) => {
@@ -223,7 +231,7 @@
 
         render() {
             if (this.state.dayViewIsActive) {
-                return <DayView />;
+                return <DayView existingRegistrations={this.existingRegistrations} />;
             }
 
             return <DatePicker toggleActiveView={this.toggleActiveView} />;
@@ -244,6 +252,7 @@
             currentFrom = parseInt(this.props.from);
             currentUntil = parseInt(this.props.until);
             currentDate = this.props.date;
+            console.log(currentDate);
             this.props.toggleActiveView();
         }
 
@@ -273,6 +282,23 @@
         ReactDOM.render(<DayView />, document.getElementById("dayView"));
     }
 
+    async function LoadRegistrations() { // returns an array of (existing) registrations
+        const url = '/api/registrations/' + id;
+
+        fetch(url, {
+            method: 'GET',
+        }).then(function (resp) {
+            if (resp.ok) {
+                return resp.json();
+            }
+            return null;
+        }).then(function (json) {
+            existingRegistrations = json;
+            console.log(existingRegistrations);
+        })
+
+    }
+
     class DayView extends React.Component {
         constructor(props) {
             super(props);
@@ -281,6 +307,7 @@
         render() {
 
             let arr = [];
+            //console.log(this.existingRegistrations);
 
             let amountOfHours = currentUntil - currentFrom;
             let amountOfMeetings = amountOfHours * 60 / (meetingDurationInMinutes + breakDurationInMinutes);
@@ -297,7 +324,7 @@
             return (
                 <div className="container">
                     <div className="row justify-content-evenly">
-                        <h3 className="p-0 mb-3">{dateString}</h3>
+                        <h3 className="p-0 mb-3">{GetDateString(currentDate)}</h3>
                         {arr}
                     </div>
                 </div>
@@ -316,7 +343,7 @@
             // Set modal values
             let mds = document.getElementById("modalDateString");
             let mts = document.getElementById("modalTimeString");
-            mds.innerText = dateString;
+            mds.innerText = GetDateString(currentDate);
             mts.innerText = this.durationString;
 
             // Show modal asking if you're sure
@@ -326,6 +353,9 @@
         }
 
         render() {
+            if (existingRegistrations.some(reg => reg.date === this.date)){
+                console.log("yes")
+            }
             const bubbleStyle = {
                 backgroundColor: "#8E36DE",
                 color: "white",
@@ -361,9 +391,10 @@
         const obj = new Object();
         obj.event_id = id;
         obj.name = document.getElementById("child-name").value;
-        // TODO:
-        // make this good lol
-        obj.date = currentDate.getFullYear() + '-' + currentDate.getMonth() + '-' + currentDate.getDay(); // yyyy-MM-dd
+        
+        let actualMonth = currentDate.getMonth() + 1;
+        obj.date = currentDate.getFullYear() + '-' + actualMonth + '-' + currentDate.getDate(); // yyyy-MM-dd
+
         let dur = document.getElementById("modalTimeString").innerText.replace(/ /g, '').split('-');
         obj.from = dur[0]; // HH:mm
         obj.until = dur[1]; // HH:mm
@@ -380,7 +411,6 @@
             }
             return null;
         }).then(function (json) {
-            console.log(json);
             if (json.message === "success") {
                 //
                 alert("good shit mate!!!!!!");

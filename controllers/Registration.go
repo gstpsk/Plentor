@@ -10,7 +10,6 @@ import (
 	"github.com/gstpsk/Plentor/db"
 	"github.com/gstpsk/Plentor/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func NewRegistrationController(ctx web.Context) error { // POST: /api/registration/new
@@ -52,20 +51,21 @@ func RegistrationsController(ctx web.Context) error { // GET: /api/registrations
 	col := db.GetRegistrationCol()
 
 	// Create objectid
-	objId, err := primitive.ObjectIDFromHex(ctx.Params()["event_id"])
-	if err != nil {
-		log.Printf("Failed to convert to ObjectID: %s", err)
-		return err
-	}
-
+	// objId, err := primitive.ObjectIDFromHex(ctx.Params()["event_id"])
+	// if err != nil {
+	// 	log.Printf("Failed to convert to ObjectID: %s", err)
+	// 	return err
+	// }
+	// log.Printf("objid: %s", objId.Hex())
 	// Form filter
-	var filter bson.M = bson.M{"eventid": objId}
+	var filter bson.M = bson.M{"eventid": ctx.Params()["event_id"]}
 
 	// Search
 	cur, err := col.Find(context.Background(), filter)
 	if err != nil {
 		log.Fatalf("Failed to query for registration with certain eventid: %s", err)
 	}
+
 	var results []models.Registration
 	cur.All(context.Background(), &results)
 
