@@ -42,6 +42,7 @@ func main() {
 	z.Post("/api/registration/new", controllers.NewRegistrationController)
 	z.Get("/api/registrations/{event_id}", controllers.RegistrationsController)
 	z.Get("/api/registration/{id}", controllers.RegistrationController)
+	z.Get("/api/registration/{id}/ical.ics", controllers.ICalController)
 
 	z.Start()
 }

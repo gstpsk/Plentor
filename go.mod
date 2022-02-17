@@ -3,6 +3,7 @@ module github.com/gstpsk/Plentor
 go 1.13
 
 require (
+	github.com/arran4/golang-ical v0.0.0-20220210002436-c7f0ed8f4eff // indirect
 	github.com/flosch/pongo2 v0.0.0-20200913210552-0d938eb266f3 // indirect
 	github.com/fsnotify/fsnotify v1.5.0 // indirect
 	github.com/go-zepto/zepto v1.0.3

@@ -333,12 +333,17 @@
         }
 
         render() {
-
-            if (this.state.existingRegistrations.length === 0) {
-                return null;
+            if (this.state.existingRegistrations != null) {
+                if (this.state.existingRegistrations.length === 0) {
+                    return null;
+                }
             }
 
             existingRegistrations = this.state.existingRegistrations;
+
+            if (existingRegistrations == null) {
+                existingRegistrations = [];
+            }
 
             // Temp array to store meetings
             let meetingBubbleArray = [];
@@ -475,8 +480,8 @@
             return null;
         }).then(function (json) {
             if (json.message === "success") {
-                //
-                alert("good shit mate!!!!!!");
+                window.onbeforeunload = null;
+                window.location.href = "/event/signup/" + json.id + "/success";
             } else {
                 document.getElementById("errorMsg").innerHTML = json.message;
                 document.getElementById("errorMsg").classList.remove("visually-hidden");

@@ -14,11 +14,12 @@ Hello, Zepto!
 
 <div class="h-100 row align-items-center">
     <div class="col">
-        <div class="container">
+        <div class="container text-center">
             <h1 class="text-center" id="eventHeader">Gelukt!</h1>
             <p class="text-center">
-                U heeft zich successvol ingeschreven! Dezes vind plaats op <b id="dateTimeString">DATUM van TIJD-TIJD</b>
+                U heeft zich successvol ingeschreven! Deze vind plaats op <b id="dateTimeString">DATUM van TIJD-TIJD</b>
             </p>
+            <button class="btn btn-primary" onclick="AddToCalendar()">Toevoegen aan kalender</button>
         </div>
     </div>
 </div>
@@ -46,6 +47,10 @@ Hello, Zepto!
                 console.error(error)
             });
 
+    }
+
+    function AddToCalendar() {
+        window.location.href = '/api/registration/' + id + '/ical.ics';
     }
 
     window.onload = init;
