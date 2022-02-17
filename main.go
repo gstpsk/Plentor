@@ -14,7 +14,7 @@ func main() {
 	// Create Zepto
 	z := zepto.NewZepto()
 
-	// Routes
+	// Pages
 	z.Get("/", controllers.IndexPage)
 	z.Get("/login", controllers.LoginPage)
 	z.Get("/logout", controllers.LogoutPage)
@@ -24,6 +24,7 @@ func main() {
 	z.Get("/event/new", controllers.NewEventPage)
 	z.Get("/event/{id}", controllers.EventPage)
 	z.Get("/event/{id}/signup", controllers.EventSignupPage)
+	z.Get("/event/signup/{id}/success", controllers.EventSignupSuccessPage)
 
 	// API routes
 
@@ -40,6 +41,7 @@ func main() {
 	// Registrations
 	z.Post("/api/registration/new", controllers.NewRegistrationController)
 	z.Get("/api/registrations/{event_id}", controllers.RegistrationsController)
+	z.Get("/api/registration/{id}", controllers.RegistrationController)
 
 	z.Start()
 }

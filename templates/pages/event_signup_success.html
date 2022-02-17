@@ -1,0 +1,54 @@
+{% extends "../layouts/default.html" %}
+
+{% block title %}
+Hello, Zepto!
+{% endblock %}
+
+{% block body %}
+<style>
+    html,
+    body {
+        height: 80%
+    }
+</style>
+
+<div class="h-100 row align-items-center">
+    <div class="col">
+        <div class="container">
+            <h1 class="text-center" id="eventHeader">Gelukt!</h1>
+            <p class="text-center">
+                U heeft zich successvol ingeschreven! Dezes vind plaats op <b id="dateTimeString">DATUM van TIJD-TIJD</b>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Get registration ID from URL
+    const id = window.location.pathname.split("/").reverse()[1];
+
+    function init() {
+        console.log("BOOBA")
+        // Retrieve data about the registration.
+        getRegistrationData();
+    }
+
+    function getRegistrationData() {
+        const url = '/api/registration/' + id;
+        let dts = document.getElementById("dateTimeString");
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                dts.innerText = data.date + " van " + data.from + " tot " + data.until;
+                console.log(data);
+            }).catch((error) => {
+                console.error(error)
+            });
+
+    }
+
+    window.onload = init;
+</script>
+
+{% endblock %}

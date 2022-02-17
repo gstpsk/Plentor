@@ -2,6 +2,7 @@
 <div class="container mt-5">
     <div id="errorMsg" class="alert alert-danger visually-hidden" role="alert"></div>
     <h1 class="text-start" id="eventHeader">Welkom!</h1>
+
     <p class="">
         <b>Locatie</b>:
         <span class="badge rounded-pill bg-primary" id="locationPill"></span>
@@ -64,6 +65,15 @@
 </div>
 
 <script type="text/babel">
+    /*jshint esversion: 6 */
+
+    // Make sure people don't navigate
+    // away from the page accidentally
+    window.onbeforeunload = function () {
+        return true;
+    };
+
+
     // Some constants
     const monthValues = [
         "January",
@@ -93,7 +103,7 @@
     );
 
     // Define our variables
-    let datepicker = [];
+    
     let name = "";
     let group = "";
     let months = [];
@@ -183,6 +193,7 @@
         }
 
         render() {
+            let datepicker = [];
             let i = 0;
             for (const month in dates) {
                 i++;
@@ -191,7 +202,12 @@
                 // Create array of buttons
                 let dbArr = [];
                 // And add the days to the array.
+                let tempDates = [];
+
+                // TODO
+                // multiple timeblocks on the same date are fucked
                 for (const tb of dates[month]) {
+                    tempDates.push(tb.date);
                     dbArr.push(
                         <DateBubble
                             toggleActiveView={this.props.toggleActiveView}
@@ -220,7 +236,7 @@
 
         toggleActiveView() {
             // Make request to retrieve existing registrations
-            LoadRegistrations().then(console.log(existingRegistrations));
+            //LoadRegistrations().then(console.log("toggleactiveview: ", existingRegistrations));
             //console.log(existingRegistrations);
             // toggle te boolean based on the previous value,
             // prevState cuz of asyncronous stuff.
@@ -231,7 +247,7 @@
 
         render() {
             if (this.state.dayViewIsActive) {
-                return <DayView existingRegistrations={this.existingRegistrations} />;
+                return <DayView existingRegistrations={this.existingRegistrations} toggleActiveView={this.toggleActiveView} />;
             }
 
             return <DatePicker toggleActiveView={this.toggleActiveView} />;
@@ -252,7 +268,6 @@
             currentFrom = parseInt(this.props.from);
             currentUntil = parseInt(this.props.until);
             currentDate = this.props.date;
-            console.log(currentDate);
             this.props.toggleActiveView();
         }
 
@@ -278,36 +293,55 @@
         }
     }
 
-    function DrawDayView() {
-        ReactDOM.render(<DayView />, document.getElementById("dayView"));
-    }
-
-    async function LoadRegistrations() { // returns an array of (existing) registrations
+    function LoadRegistrations() { // returns an array of (existing) registrations
         const url = '/api/registrations/' + id;
 
-        fetch(url, {
-            method: 'GET',
-        }).then(function (resp) {
-            if (resp.ok) {
-                return resp.json();
-            }
-            return null;
-        }).then(function (json) {
-            existingRegistrations = json;
-            console.log(existingRegistrations);
-        })
+        return fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                return data
+            })
+            .catch((error) => {
+                console.error(error)
+            });
 
     }
 
     class DayView extends React.Component {
         constructor(props) {
             super(props);
+            this.state = { existingRegistrations: [] };
+            this.changeRegState = this.changeRegState.bind(this);
+            this.backToDatePicker = this.backToDatePicker.bind(this);
+        }
+
+        changeRegState(arr) {
+            this.setState({ existingRegistrations: arr })
+        }
+
+        componentDidMount() {
+            // god i hate javascript
+            console.log("component did mount!");
+            LoadRegistrations().then(value => this.changeRegState(value));
+        }
+
+        backToDatePicker() {
+            currentFrom = 0;
+            currentUntil = 0;
+            currentDate = new Date();
+            this.props.toggleActiveView();
         }
 
         render() {
 
-            let arr = [];
-            //console.log(this.existingRegistrations);
+            if (this.state.existingRegistrations.length === 0) {
+                return null;
+            }
+
+            existingRegistrations = this.state.existingRegistrations;
+
+            // Temp array to store meetings
+            let meetingBubbleArray = [];
 
             let amountOfHours = currentUntil - currentFrom;
             let amountOfMeetings = amountOfHours * 60 / (meetingDurationInMinutes + breakDurationInMinutes);
@@ -318,14 +352,17 @@
                 from.setMinutes(from.getMinutes() + i * (meetingDurationInMinutes + breakDurationInMinutes));
                 let until = new Date(from.getTime());
                 until.setMinutes(until.getMinutes() + meetingDurationInMinutes);
-                arr.push(<MeetingBubble from={from} until={until} key={currentFrom + i} />);
+                meetingBubbleArray.push(<MeetingBubble from={from} until={until} key={currentFrom + i} />);
             }
 
             return (
                 <div className="container">
                     <div className="row justify-content-evenly">
-                        <h3 className="p-0 mb-3">{GetDateString(currentDate)}</h3>
-                        {arr}
+                        <div className="row align-items-evenly p-0 mb-4">
+                            <h3 className="text-start col-11 p-0" id="eventHeader">{GetDateString(currentDate)}</h3>
+                            <button id="backBtn" type="button" className="btn btn-sm btn-primary col-1" onClick={this.backToDatePicker}>&lt;</button>
+                        </div>
+                        {meetingBubbleArray}
                     </div>
                 </div>
             );
@@ -336,6 +373,7 @@
         constructor(props) {
             super(props);
             this.handleClick = this.handleClick.bind(this);
+            this.checkExistingRegistration = this.checkExistingRegistration.bind(this);
             this.durationString = "";
         }
 
@@ -346,26 +384,23 @@
             mds.innerText = GetDateString(currentDate);
             mts.innerText = this.durationString;
 
-            // Show modal asking if you're sure
+            // Show modal asking for confirmation,
+            // data will be submitted upon clicking yes.
             confirmationModal.show();
+        }
 
-            // Submit data on agree
+        checkExistingRegistration(reg) {
+            let dur = this.durationString.replace(/ /g, '').split('-');
+            return reg.date == GetShortDateString(currentDate) && reg.from == dur[0] && reg.until == dur[1];
         }
 
         render() {
-            if (existingRegistrations.some(reg => reg.date === this.date)){
-                console.log("yes")
-            }
-            const bubbleStyle = {
-                backgroundColor: "#8E36DE",
-                color: "white",
-                width: '200px',
-                height: '80px',
-                borderRadius: '500px',
-                marginBottom: '20px',
-            }
+            // To keep track of occupied meetings
+            let isInactive = false;
 
-            //let durationString = "";
+            // very importante
+            this.durationString = "";
+
             this.durationString = this.durationString + this.props.from.getHours() + ":" + this.props.from.getMinutes();
 
             // Pad with zeroes
@@ -379,21 +414,49 @@
                 this.durationString = this.durationString + "0";
             }
 
-            return (
-                <div style={bubbleStyle} className="d-flex col-6 justify-content-center align-items-center" onClick={this.handleClick}>
-                    <p className="lead text-center m-0">{this.durationString}</p>
-                </div>
-            )
+            // Evalute if this meeting has already been reserved
+            if (existingRegistrations.some(this.checkExistingRegistration)) {
+                isInactive = true;
+            }
+
+            // Styling da bois
+            const bubbleStyle = {
+                backgroundColor: "#8E36DE",
+                color: "white",
+                width: '200px',
+                height: '80px',
+                borderRadius: '500px',
+                marginBottom: '20px',
+            }
+
+            // Make button unclickable and text line-through if it is indeed occupied
+            if (isInactive) {
+                return (
+                    <button style={bubbleStyle} className="btn btn-primary d-flex col-6 justify-content-center align-items-center" onClick={this.handleClick} disabled>
+                        <p className="lead text-center m-0"><del>{this.durationString}</del></p>
+                    </button>
+                )
+            } else {
+                return (
+                    <button style={bubbleStyle} className="btn btn-primary d-flex col-6 justify-content-center align-items-center" onClick={this.handleClick}>
+                        <p className="lead text-center m-0">{this.durationString}</p>
+                    </button>
+                )
+            }
         }
+    }
+
+    function GetShortDateString(date) {
+        let actualMonth = date.getMonth() + 1;
+        return date.getFullYear() + '-' + actualMonth + '-' + date.getDate();
     }
 
     function SubmitRegistration() {
         const obj = new Object();
         obj.event_id = id;
         obj.name = document.getElementById("child-name").value;
-        
-        let actualMonth = currentDate.getMonth() + 1;
-        obj.date = currentDate.getFullYear() + '-' + actualMonth + '-' + currentDate.getDate(); // yyyy-MM-dd
+
+        obj.date = GetShortDateString(currentDate); // yyyy-MM-dd
 
         let dur = document.getElementById("modalTimeString").innerText.replace(/ /g, '').split('-');
         obj.from = dur[0]; // HH:mm

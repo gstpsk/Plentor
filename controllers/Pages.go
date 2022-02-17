@@ -44,3 +44,7 @@ func EventPage(ctx web.Context) error {
 func EventSignupPage(ctx web.Context) error {
 	return ctx.Render("pages/event_signup")
 }
+
+func EventSignupSuccessPage(ctx web.Context) error {
+	return ctx.Render("pages/event_signup_success")
+}
