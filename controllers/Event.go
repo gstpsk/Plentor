@@ -75,25 +75,64 @@ func UpdateEventController(ctx web.Context) error { // POST: /api/event/{id}
 	// Read request body to buffer and unmarshall
 	buf, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
-		log.Fatalf("Failed to read body to buffer: %s", err)
+		log.Printf("Failed to read body to buffer: %s", err)
+		ctx.SetStatus(500)
+		respMsg.Message = "Server error"
+		return ctx.RenderJson(respMsg)
 	}
+
 	// Create event object
 	updatedEvent := models.Event{}
 	// Unmarhall json into event object
 	json.Unmarshal(buf, &updatedEvent)
-	// set user id
+
+	// Get events
+	col := db.GetEventCol()
+
+	// Create objectid
+	objId, err := primitive.ObjectIDFromHex(ctx.Params()["id"])
+	if err != nil {
+		log.Printf("Failed to convert hex to ObjectId: %s", objId)
+		ctx.SetStatus(500)
+		respMsg.Message = "Server error"
+		return ctx.RenderJson(respMsg)
+	}
+
+	// Create filter
+	var filter bson.M = bson.M{"_id": objId}
+
+	// Query
+	sres := col.FindOne(context.Background(), filter)
+
+	// Create event object and demarshall
+	var event models.Event
+	err = sres.Decode(&event)
+	if err != nil {
+		ctx.SetStatus(403)
+		respMsg.Message = "Forbidden"
+		return ctx.RenderJson(respMsg)
+	}
+
+	// Check if user id of original event matches user trying to update the event
 	cookie, err := ctx.Request().Cookie("SESSION-ID")
-	updatedEvent.UserId = Sessions[cookie.Value]["id"]
+	if event.UserId != Sessions[cookie.Value]["id"] {
+		ctx.SetStatus(403)
+		respMsg.Message = "Forbidden"
+		return ctx.RenderJson(respMsg)
+	}
+
+	// Set user id on updated event
+	updatedEvent.UserId = event.UserId
 
 	// Update event object in database
-	col := db.GetEventCol()
-	objId, err := primitive.ObjectIDFromHex(ctx.Params()["id"])
-	var filter bson.M = bson.M{"_id": objId}
-	res, err := col.ReplaceOne(context.Background(), filter, updatedEvent)
+	ures, err := col.ReplaceOne(context.Background(), filter, updatedEvent)
 	if err != nil {
-		log.Fatalf("Failed to update event in database: %s", err)
+		log.Printf("Failed to update event in database: %s", err)
+		ctx.SetStatus(500)
+		respMsg.Message = "Failed to update event"
 	}
-	if !(res.ModifiedCount > 0) {
+	if !(ures.ModifiedCount > 0) {
+		ctx.SetStatus(500)
 		respMsg.Message = "Failed to update event"
 	}
 
@@ -127,25 +166,40 @@ func EventsController(ctx web.Context) error { // GET: /api/events
 func EventController(ctx web.Context) error { // GET: /api/event/{id}
 	// TODO
 	// This also rly bad for security
+	// But people registering need to know
+	// the event details
 	if false {
 		ctx.SetStatus(403)
 		return ctx.RenderJson("Forbidden")
 	}
 
+	// Get events
 	col := db.GetEventCol()
+
+	// Create objectid
 	objId, err := primitive.ObjectIDFromHex(ctx.Params()["id"])
 	if err != nil {
-		log.Fatalf("Failed to convert hex to ObjectId: %s", objId)
+		log.Printf("Failed to convert hex to ObjectId: %s", objId)
+		ctx.SetStatus(500)
+		return ctx.RenderJson("Server error")
 	}
+
+	// Create filter
 	var filter bson.M = bson.M{"_id": objId}
+
+	// Query
 	res := col.FindOne(context.Background(), filter)
+
+	// Create event objet and demarshall
 	var event models.Event
 	err = res.Decode(&event)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Redirect("/dashboard")
 		} else {
-			log.Fatalf("Failed to decode event: %s", err)
+			log.Printf("Failed to decode event: %s", err)
+			ctx.SetStatus(500)
+			return ctx.RenderJson("Server error")
 		}
 	}
 

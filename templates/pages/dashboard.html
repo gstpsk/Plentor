@@ -1,45 +1,153 @@
 {% extends "../layouts/default.html" %}
 
 {% block title %}
-  Hello, Zepto!
+Hello, Zepto!
 {% endblock %}
 
 {% block body %}
-  <div class="container mt-5">
-      <p class="h1 text-center">Dashboard</p>
+<div class="container mt-5">
+  <div class="row align-items-center">
+    <div class="col-10">
+      <p class="h1 text-start">Dashboard</p>
       <p class="h5" id="eventAmount">Events: 0</p>
-      <div class="container" id="eventContainer">
-        <p class="text-muted">It appears you haven't created any events yet.</p>
-      </div>
-
-      <a href="/event/new">Creëer mentorgesprek</a>
+    </div>
+    <div class="col-2 d-flex justify-content-end">
+      <button class="btn btn-primary btn-sm rounded-pill" onclick="window.location.href = '/event/new';"><i
+          style="font-size: 1rem;" class="bi bi-plus"></i>New event</button>
+    </div>
   </div>
+  <div class="container" id="eventContainer">
+    <p class="text-muted">It appears you haven't created any events yet.</p>
+  </div>
+</div>
 
-  <script>
-    function LoadEvents() {
-      console.log("Window is loaded!");
-      fetch('/api/events').then(response => {
-        if (response.ok) {
-          return response.json();
-        } else { throw Error("Failed to fetch events"); }
-      }).then(data => {
-        console.log(data);
-        // Get our eventContainer
-        const ea = document.getElementById("eventAmount");
-        const ec = document.getElementById("eventContainer");
-        if (data.length > 0) {
-          ea.innerText = "Events: " + data.length;
-          ec.innerHTML = ""; // Clear current html if we have more than 0 elements
-          for (let event of data) {
-            console.log("inserting...", event);
-            ec.insertAdjacentHTML("afterbegin", `<a class="row" href="/event/${event._id}">${event.name}</a>`);
-          }
-        }
-      }).catch((error) => {
-        console.log(error);
-      });
+<script type="text/babel">
+  let events = [];
+
+  function LoadEvents() {
+    console.log("Window is loaded!");
+    fetch('/api/events').then(response => {
+      if (response.ok) {
+        return response.json();
+      } else { throw Error("Failed to fetch events"); }
+    }).then(data => {
+      console.log(data);
+      // Get our eventContainer
+      const ea = document.getElementById("eventAmount");
+      const ec = document.getElementById("eventContainer");
+      if (data.length > 0) {
+        ea.innerText = "Events: " + data.length;
+        //ec.innerHTML = ""; // Clear current html if we have more than 0 elements
+        events = data;
+        Draw();
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  function Draw() {
+    console.log("drawing...");
+    ReactDOM.render(<EventList />, document.getElementById("eventContainer"));
+    console.log("done?");
+  }
+
+  class EventList extends React.Component {
+    constructor(props) {
+      super(props)
     }
 
-    window.onload = LoadEvents
-  </script>
+    render() {
+      // Array to store event cards
+      let eventCardArray = [];
+      // Insert each event
+      for (let event of events) {
+        console.log(event);
+        eventCardArray.push(<EventCard event={event} key={event._id} />);
+      }
+
+      return (
+        <div className="row row-cols-1 row-cols-md-3 g-4 mt-3">{eventCardArray}</div>
+      )
+    }
+  }
+
+  class EventCard extends React.Component {
+    constructor(props) {
+      super(props)
+      this.handleClick = this.handleClick.bind(this);
+      this.state = { hover: false };
+      this.toggleHoverState = this.toggleHoverState.bind(this);
+    }
+
+    handleClick() {
+      window.location.href = `/event/${this.props.event._id}`;
+    }
+
+    toggleHoverState() {
+      this.setState({ hover: !this.state.hover })
+    }
+
+    render() {
+      let cardStyle = {}
+      let timeUntilString = "";
+
+      if (this.state.hover) {
+        cardStyle = { backgroundColor: '#fbeaff' }
+      }
+
+      if (this.props.event.timeblocks.length > 0) {
+        let currentTime = new Date();
+        let dayDiff = 999;
+        // Check each timeblock
+        for (let tb of this.props.event.timeblocks) {
+          // Store its date
+          const tempDate = new Date(tb.date);
+          // calculate the difference from the current date
+          const difference = tempDate.valueOf() - currentTime.valueOf();
+          console.log("difference", this.props.event.name, difference);
+          // determine if the date lays in the future
+          if (difference > 0) {
+            // tempDate is in the future
+            // convert diff to days
+            const tempDiff = parseInt(difference / (24 * 60 * 60 * 1000));
+            // select closest day difference
+            if (tempDiff < dayDiff) {
+              console.log(tempDiff);
+              dayDiff = tempDiff + 1;
+              timeUntilString = 'Over ' + dayDiff + " dagen";
+            }
+          }
+        }
+        if (dayDiff === 999) {
+          timeUntilString = 'Voltooid';
+        }
+      } else {
+        timeUntilString = "n.v.t.";
+      }
+
+      return (
+        <div className="col mt-3">
+          <div style={cardStyle} className="card border-primary" onMouseEnter={this.toggleHoverState} onMouseLeave={this.toggleHoverState}>
+            <div className="card-body">
+              <div className="d-flex w-100 justify-content-between">
+                <h5 className="mb-1">{this.props.event.name}</h5>
+                <small>Status: {timeUntilString}</small>
+              </div>
+              <p className="mb-1">{this.props.event.location}</p>
+              <a onClick={this.handleClick} href="#" className="stretched-link"></a>
+            </div>
+          </div>
+        </div>
+      )
+    }
+  }
+
+  window.onload = LoadEvents;
+</script>
+
+<script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+
 {% endblock %}

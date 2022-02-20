@@ -82,13 +82,13 @@ Hello, Zepto!
         </div>
         <div class="tab-pane fade mt-4" id="share" role="tabpanel" aria-labelledby="share-tab">
             <div class="mb-3">
-                <label class="form-label">Link</label>
+                <label class="form-label"><strong>Link</strong></label>
                 <input id="eventLink" name="name" type="text" class="form-control" />
                 <label class="text-muted">Let op: iedereen met deze link kan zich inschrijven voor deze
                     bijeenkomst.</label>
             </div>
             <div class="mb-3">
-                <p class="">Ingeschreven</p>
+                <p><strong>Ingeschreven</strong></p>
                 <div id="registrationTableDiv">
                     <p class="text-muted">Niemand heeft zich nog ingeschreven voor deze bijeenkomst.</p>
                 </div>
@@ -112,13 +112,13 @@ Hello, Zepto!
     const id = window.location.pathname.split('/').pop();
     // Make sure people don't navigate
     // away from the page accidentally
-    window.onbeforeunload = function () {
-        return true;
-    };
 
     function init() {
         LoadEventData();
         ReactDOM.render(<RegistrationTable />, document.getElementById("registrationTableDiv"));
+        window.onbeforeunload = function () {
+            return true;
+        };
     }
 
     function LoadEventData() {
@@ -261,10 +261,7 @@ Hello, Zepto!
             method: 'POST',
             body: json
         }).then(function (response) {
-            if (response.ok) {
-                return response.json();
-            }
-            return null;
+            return response.json();
         }).then(function (json) {
             console.log(json);
             if (json.message === "success") {
@@ -275,6 +272,7 @@ Hello, Zepto!
                 document.getElementById("errorMsg").innerHTML = json.message;
                 document.getElementById("errorMsg").classList.remove("visually-hidden");
             }
+            return json.message;
         }).catch(function (error) {
             console.error(error);
         })
@@ -308,7 +306,6 @@ Hello, Zepto!
         }
 
         render() {            
-            console.log("ayo:", this.state.registrationRowArray.length);
             return (
                 <table className="table">
                     <thead>
@@ -333,8 +330,6 @@ Hello, Zepto!
         }
 
         render() {
-            console.log(this.date);
-
             return (
                 <tr>
                     <th scope="row">{this.props.num}</th>
