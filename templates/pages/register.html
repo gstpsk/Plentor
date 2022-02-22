@@ -57,11 +57,10 @@ Hello, Zepto!
                 }
                 return null;
             }).then(function (json) {
-                const obj = JSON.parse(json);
-                if (obj.message === "success") {
+                if (json.message === "success") {
                     window.location = "dashboard";
                 } else {
-                    document.getElementById("errorMsg").innerHTML = obj.message;
+                    document.getElementById("errorMsg").innerHTML = json.message;
                 }
             }).catch(function (error) {
                 console.error(error);
