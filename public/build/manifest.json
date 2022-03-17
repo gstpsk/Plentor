@@ -1,0 +1,8 @@
+{
+  "app.css": "http://localhost:3808/public/build/app.css",
+  "app.js": "http://localhost:3808/public/build/app.js",
+  "app.css.map": "http://localhost:3808/public/build/app.css.map",
+  "app.js.map": "http://localhost:3808/public/build/app.js.map",
+  "vendor.js": "http://localhost:3808/public/build/vendor.js",
+  "vendor.js.map": "http://localhost:3808/public/build/vendor.js.map"
+}
